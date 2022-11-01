@@ -69,7 +69,7 @@ def serve_layout():
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'center'),
             dbc.Col([
                 html.H1(id = 'key-figures-finland-header-x', style = {'textAlign':'center'}, className="mb-3 mt-3 display-3"),
-                dcc.Loading(type = random.choice(['graph', 'cube', 'circle', 'dot' ,'default']), children =dcc.Graph(id = 'key-figures-finland-region-map-x', figure = plot_empty_map()))
+                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = plot_empty_map())
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
 
@@ -146,4 +146,4 @@ app.clientside_callback(
 )
 app.layout = serve_layout
 if __name__ == "__main__":
-    app.run_server(debug=True)    
+    app.run_server(debug=False)  
