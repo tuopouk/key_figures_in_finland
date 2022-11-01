@@ -4,7 +4,6 @@ from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import orjson
-import random
 from plotly.io.json import to_json_plotly
 
 municipal_data = pd.read_csv('assets/key_figures_municipalities.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Municipality'}).set_index('Municipality')
