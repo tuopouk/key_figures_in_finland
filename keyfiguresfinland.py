@@ -22,7 +22,7 @@ with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
 with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
     regions_json = orjson.loads(f.read())
-    
+
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2021&outputFormat=json    
 with open('assets/sub-regions.json', encoding = 'utf-8') as f:
     subregions_json = orjson.loads(f.read())
@@ -146,4 +146,4 @@ app.clientside_callback(
 )
 app.layout = serve_layout
 if __name__ == "__main__":
-    app.run_server(debug=False)    
+    app.run_server(debug=True)    
