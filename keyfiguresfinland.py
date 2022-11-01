@@ -50,7 +50,7 @@ def serve_layout():
             dbc.Col([
                 html.H2('Key figure'),
                 dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-x',
-                             options = key_figures,
+                             options = [{'label':kf, 'value':kf} for kf in key_figures],
                              value = "Degree of urbanisation, %, 2020",
                              multi = False,
                              style = {'font-size':20, 'font-family':'Arial','color': 'black'}
@@ -146,4 +146,4 @@ app.clientside_callback(
 )
 app.layout = serve_layout
 if __name__ == "__main__":
-    app.run_server(debug=False)    
+    app.run_server(debug=True)    
