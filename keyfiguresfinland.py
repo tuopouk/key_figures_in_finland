@@ -79,7 +79,6 @@ def serve_layout():
         ], fluid = True)    
 
 def plot_empty_map():
-    
     return px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})
 
 def plot_map(key_figure, region_level):
