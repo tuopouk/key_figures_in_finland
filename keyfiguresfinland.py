@@ -16,7 +16,7 @@ whole_country_df = municipal_data.loc['WHOLE COUNTRY']
 municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
-with open('assets/municipalities.json', encoding = 'latin-1') as f:
+with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
     municipalities_json = orjson.loads(f.read())
     
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
