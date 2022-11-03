@@ -15,8 +15,8 @@ whole_country_df = municipal_data.loc['WHOLE COUNTRY']
 municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
-with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
-    municipalities_json = orjson.loads(f.read())
+#with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
+#    municipalities_json = orjson.loads(f.read())
     
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
 with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
@@ -26,8 +26,12 @@ with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
 with open('assets/sub-regions.json', encoding = 'utf-8') as f:
     subregions_json = orjson.loads(f.read())
     
-geojson_collection = {'Municipality':municipalities_json, 'Region':regions_json, 'Sub-region': subregions_json}
-data_collection =  {'Municipality':municipal_data, 'Region':regions_data, 'Sub-region': subregions_data}
+geojson_collection = {#'Municipality':municipalities_json, 
+                      'Region':regions_json, 
+                      'Sub-region': subregions_json}
+data_collection =  {#'Municipality':municipal_data,
+                    'Region':regions_data,
+                    'Sub-region': subregions_data}
 
 key_figures = sorted(list(pd.unique(municipal_data.columns)))
 
@@ -35,14 +39,14 @@ external_stylesheets = [dbc.themes.SUPERHERO]
 
 app = Dash(name = __name__, external_stylesheets = external_stylesheets
           )
-app.title = "Finland's Municipal Key Figures"
+app.title = "Finland's Regional Key Figures"
 server = app.server
 
 def serve_layout():
     
     return dbc.Container([
         
-        html.Div("Finland's Municipal Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
+        html.Div("Finland's Regional Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
 
         dbc.Row([
             
@@ -58,7 +62,7 @@ def serve_layout():
                 html.H2('Regional level'),
                 dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
                              options = [{'label':region, 'value':region} for region in data_collection.keys()],
-                             value = 'Municipality',
+                             value = 'Region',
                              multi = False,
                              style = {'font-size':20, 'font-family':'Arial','color': 'black'}
                              ),
