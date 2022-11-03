@@ -111,8 +111,8 @@ def plot_map(key_figure, region_level):
     return fig
 
 @app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value') )
-def update_header(key_figure, region_level):
-    return f"{key_figure} by {region_level}".capitalize()
+def update_header(key_figure):
+    return f"{key_figure} by region".capitalize()
 
 @app.callback(Output('key-figures-finland-whole-country-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'))
 def update_whole_country_header(key_figure):
