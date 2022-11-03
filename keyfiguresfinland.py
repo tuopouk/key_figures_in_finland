@@ -8,11 +8,11 @@ from plotly.io.json import to_json_plotly
 
 # municipal_data = pd.read_csv('assets/key_figures_municipalities.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Municipality'}).set_index('Municipality')
 regions_data = pd.read_csv('assets/key_figures_regions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Region'}).set_index('Region')
-subregions_data = pd.read_csv('assets/key_figures_subregions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Sub-region'}).set_index('Sub-region')
+# subregions_data = pd.read_csv('assets/key_figures_subregions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Sub-region'}).set_index('Sub-region')
 whole_country_df = regions_data.loc['WHOLE COUNTRY']
 
 # The municipal dataset also has the whole country's key figures.
-# municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
+regions_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
 # with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
@@ -23,17 +23,19 @@ with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
     regions_json = orjson.loads(f.read())
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2021&outputFormat=json    
-with open('assets/sub-regions.json', encoding = 'utf-8') as f:
-    subregions_json = orjson.loads(f.read())
+# with open('assets/sub-regions.json', encoding = 'utf-8') as f:
+#     subregions_json = orjson.loads(f.read())
     
 geojson_collection = {
     # 'Municipality':municipalities_json, 
     'Region':regions_json, 
-    'Sub-region': subregions_json}
+#     'Sub-region': subregions_json
+}
 data_collection =  {
     # 'Municipality':municipal_data, 
     'Region':regions_data, 
-    'Sub-region': subregions_data}
+#     'Sub-region': subregions_data
+}
 
 key_figures = sorted(list(pd.unique(regions_data.columns)))
 
@@ -61,13 +63,13 @@ def serve_layout():
                              style = {'font-size':20, 'font-family':'Arial','color': 'black'}
                              ),
                 html.Br(),
-                html.H2('Regional level'),
-                dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
-                             options = [{'label':region, 'value':region} for region in data_collection.keys()],
-                             value = 'Region',
-                             multi = False,
-                             style = {'font-size':20, 'font-family':'Arial','color': 'black'}
-                             ),
+#                 html.H2('Regional level'),
+#                 dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
+#                              options = [{'label':region, 'value':region} for region in data_collection.keys()],
+#                              value = 'Region',
+#                              multi = False,
+#                              style = {'font-size':20, 'font-family':'Arial','color': 'black'}
+#                              ),
                 html.H1(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 display-2"),
                 html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center fs-3 text"),
                 
@@ -108,7 +110,7 @@ def plot_map(key_figure, region_level):
                       )    
     return fig
 
-@app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'),Input('key-figures-finland-region-selection-x', 'value') )
+@app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value') )
 def update_header(key_figure, region_level):
     return f"{key_figure} by {region_level}".capitalize()
 
@@ -123,12 +125,11 @@ def update_whole_country_header(key_figure):
 @app.callback(
     Output('key-figures-finland-map-data-store-x','data'),
     Output('key-figures-finland-map-layout-store-x','data'),
-    Input('key-figures-finland-key-figure-selection-x', 'value'),
-    Input('key-figures-finland-region-selection-x', 'value')       
+    Input('key-figures-finland-key-figure-selection-x', 'value')    
 )
-def update_map(key_figure, region_level):
+def update_map(key_figure):
     
-    map_figure = plot_map(key_figure, region_level)        
+    map_figure = plot_map(key_figure, 'Region')        
     map_data = orjson.loads(to_json_plotly(map_figure))['data']
     map_layout = orjson.loads(to_json_plotly(map_figure))['layout']
     
