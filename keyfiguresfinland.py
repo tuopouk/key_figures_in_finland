@@ -66,8 +66,8 @@ def plot_empty_map():
 # Generate map data and layout.
 def plot_map(key_figure):
 
-    fig = px.choropleth_mapbox(region_data[[key_figure]].reset_index(), 
-                           geojson=region_json, 
+    fig = px.choropleth_mapbox(regions_data[[key_figure]].reset_index(), 
+                           geojson=regions_json, 
                            locations='Region', 
                            color=key_figure,
                            mapbox_style="open-street-map",
