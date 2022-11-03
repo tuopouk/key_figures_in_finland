@@ -28,6 +28,32 @@ app = Dash(name = __name__, external_stylesheets = external_stylesheets)
 app.title = "Finland's Regional Key Figures"
 server = app.server
 
+
+# Empty map for initialization.
+def plot_empty_map():
+    return px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})
+
+# Generate map data and layout.
+def plot_map(key_figure):
+
+    fig = px.choropleth_mapbox(regions_data[[key_figure]].reset_index(), 
+                           geojson=regions_json, 
+                           locations='Region', 
+                           color=key_figure,
+                           mapbox_style="open-street-map",
+                           featureidkey='properties.name',
+                           zoom=4.2, 
+                           color_continuous_scale = 'viridis',
+                           center = {"lat": 64.961093, "lon": 27.590605},                           
+                           labels={key_figure: key_figure}
+                      )
+    fig = fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
+                      height=800,
+                      hoverlabel = dict(font_size = 28, font_family = 'Arial')
+                      )    
+    return fig
+
+
 app.layout = dbc.Container([
         
         html.Div("Finland's Regional Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
@@ -59,29 +85,7 @@ app.layout = dbc.Container([
         dcc.Store(id = 'key-figures-finland-map-layout-store-x') # Store map layout.       
         ], fluid = True)    
 
-# Empty map for initialization.
-def plot_empty_map():
-    return px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})
 
-# Generate map data and layout.
-def plot_map(key_figure):
-
-    fig = px.choropleth_mapbox(regions_data[[key_figure]].reset_index(), 
-                           geojson=regions_json, 
-                           locations='Region', 
-                           color=key_figure,
-                           mapbox_style="open-street-map",
-                           featureidkey='properties.name',
-                           zoom=4.2, 
-                           color_continuous_scale = 'viridis',
-                           center = {"lat": 64.961093, "lon": 27.590605},                           
-                           labels={key_figure: key_figure}
-                      )
-    fig = fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
-                      height=800,
-                      hoverlabel = dict(font_size = 28, font_family = 'Arial')
-                      )    
-    return fig
 
 @app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value') )
 def update_header(key_figure):
@@ -102,7 +106,7 @@ def update_whole_country_header(key_figure):
 )
 def update_map(key_figure):
     
-    map_figure = plot_map(key_figure, 'Region')        
+    map_figure = plot_map(key_figure)        
     map_data = orjson.loads(to_json_plotly(map_figure))['data']
     map_layout = orjson.loads(to_json_plotly(map_figure))['layout']
     
