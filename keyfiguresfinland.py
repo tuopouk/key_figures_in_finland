@@ -6,17 +6,17 @@ import plotly.express as px
 import orjson
 from plotly.io.json import to_json_plotly
 
-municipal_data = pd.read_csv('assets/key_figures_municipalities.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Municipality'}).set_index('Municipality')
+# municipal_data = pd.read_csv('assets/key_figures_municipalities.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Municipality'}).set_index('Municipality')
 regions_data = pd.read_csv('assets/key_figures_regions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Region'}).set_index('Region')
 subregions_data = pd.read_csv('assets/key_figures_subregions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Sub-region'}).set_index('Sub-region')
-whole_country_df = municipal_data.loc['WHOLE COUNTRY']
+whole_country_df = regions_data.loc['WHOLE COUNTRY']
 
 # The municipal dataset also has the whole country's key figures.
-municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
+# municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
-#with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
-#    municipalities_json = orjson.loads(f.read())
+# with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
+#     municipalities_json = orjson.loads(f.read())
     
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
 with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
@@ -26,14 +26,16 @@ with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
 with open('assets/sub-regions.json', encoding = 'utf-8') as f:
     subregions_json = orjson.loads(f.read())
     
-geojson_collection = {#'Municipality':municipalities_json, 
-                      'Region':regions_json, 
-                      'Sub-region': subregions_json}
-data_collection =  {#'Municipality':municipal_data,
-                    'Region':regions_data,
-                    'Sub-region': subregions_data}
+geojson_collection = {
+    # 'Municipality':municipalities_json, 
+    'Region':regions_json, 
+    'Sub-region': subregions_json}
+data_collection =  {
+    # 'Municipality':municipal_data, 
+    'Region':regions_data, 
+    'Sub-region': subregions_data}
 
-key_figures = sorted(list(pd.unique(municipal_data.columns)))
+key_figures = sorted(list(pd.unique(regions_data.columns)))
 
 external_stylesheets = [dbc.themes.SUPERHERO]
 
@@ -149,4 +151,4 @@ app.clientside_callback(
 )
 app.layout = serve_layout
 if __name__ == "__main__":
-    app.run_server(debug=False)  
+    app.run_server(debug=True)    
