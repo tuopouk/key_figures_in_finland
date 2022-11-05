@@ -4,57 +4,43 @@ from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import orjson
-from plotly.io.json import to_json
 
-# Data provided by Statistics Finland.
+municipal_data = pd.read_csv('assets/key_figures_municipalities.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Municipality'}).set_index('Municipality')
 regions_data = pd.read_csv('assets/key_figures_regions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Region'}).set_index('Region')
-
-# Whole country figures on a pandas Series.
+subregions_data = pd.read_csv('assets/key_figures_subregions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Sub-region'}).set_index('Sub-region')
 whole_country_df = regions_data.loc['WHOLE COUNTRY']
 
-# Drop since not needed.
+# The municipal dataset also has the whole country's key figures.
+municipal_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 regions_data.drop('WHOLE COUNTRY', axis = 0, inplace = True)
 
-# The json file for the mapbox viz.
+# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
+with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
+    municipalities_json = orjson.loads(f.read())
+    
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
 with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
     regions_json = orjson.loads(f.read())
+
+# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2021&outputFormat=json    
+with open('assets/sub-regions.json', encoding = 'utf-8') as f:
+    subregions_json = orjson.loads(f.read())
+    
+geojson_collection = {'Municipality':municipalities_json, 'Region':regions_json,'Sub-region': subregions_json}
+data_collection =  {'Municipality':municipal_data, 'Region':regions_data,'Sub-region': subregions_data}
 
 key_figures = sorted(list(pd.unique(regions_data.columns)))
 
 external_stylesheets = [dbc.themes.SUPERHERO]
 
-app = Dash(name = __name__, external_stylesheets = external_stylesheets)
+app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False
+          )
 app.title = "Finland's Regional Key Figures"
 server = app.server
 
-
-# Empty map for initialization.
-def plot_empty_map():
-    return px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})
-
-# Generate map data and layout.
-def plot_map(key_figure):
-
-    fig = px.choropleth_mapbox(regions_data[[key_figure]].reset_index(), 
-                           geojson=regions_json, 
-                           locations='Region', 
-                           color=key_figure,
-                           mapbox_style="open-street-map",
-                           featureidkey='properties.name',
-                           zoom=4.2, 
-                           color_continuous_scale = 'viridis',
-                           center = {"lat": 64.961093, "lon": 27.590605},                           
-                           labels={key_figure: key_figure}
-                      )
-    fig = fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
-                      height=800,
-                      hoverlabel = dict(font_size = 28, font_family = 'Arial')
-                      )    
-    return fig
-
-
-app.layout = dbc.Container([
+def serve_layout():
+    
+    return dbc.Container([
         
         html.Div("Finland's Regional Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
 
@@ -69,27 +55,33 @@ app.layout = dbc.Container([
                              style = {'font-size':20, 'font-family':'Arial','color': 'black'}
                              ),
                 html.Br(),
+                html.H2('Regional level'),
+                dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
+                             options = [{'label':region, 'value':region} for region in data_collection.keys()],
+                             value = 'Region',
+                             multi = False,
+                             style = {'font-size':20, 'font-family':'Arial','color': 'black'}
+                             ),
                 html.H1(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 display-2"),
                 html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center fs-3 text"),
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'center'),
             dbc.Col([
                 html.H1(id = 'key-figures-finland-header-x', style = {'textAlign':'center'}, className="mb-3 mt-3 display-3"),
-                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = plot_empty_map())
+                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}))
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
 
             ], justify = 'center', className = "m-auto d-flex justify-content-center"),
-    
-        dcc.Store(id = 'key-figures-finland-map-data-store-x'), # Store map data.
-        dcc.Store(id = 'key-figures-finland-map-layout-store-x') # Store map layout.       
+        dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
+        dcc.Store(id = 'key-figures-finland-locations-x'),
+        dcc.Store(id = 'key-figures-finland-zs-x'),
         ], fluid = True)    
 
 
-
-@app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value') )
-def update_header(key_figure):
-    return f"{key_figure} by region".capitalize()
+@app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'),Input('key-figures-finland-region-selection-x', 'value') )
+def update_header(key_figure, region_level):
+    return f"{key_figure} by {region_level}".capitalize()
 
 @app.callback(Output('key-figures-finland-whole-country-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'))
 def update_whole_country_header(key_figure):
@@ -100,35 +92,59 @@ def update_whole_country_header(key_figure):
     return html.P([kf_string,html.Br(),"in Finland:",html.Br(), ("{:,}".format(whole_country_df.loc[key_figure])).replace('.0','').replace(',',' ')+key_figure.split(',')[-2].replace('2020','').replace('2021','').replace(key_figure.split(',')[0],'')],className="fw-bold")
 
 @app.callback(
-    Output('key-figures-finland-map-data-store-x','data'),
-    Output('key-figures-finland-map-layout-store-x','data'),
-    Input('key-figures-finland-key-figure-selection-x', 'value')    
+    Output('key-figures-finland-geojson-data','data'),
+    Input('key-figures-finland-region-selection-x','value')  
 )
-def update_map(key_figure):
-    
-    map_figure = plot_map(key_figure)
-    map_data_json_string = orjson.loads(to_json(map_figure, engine = 'orjson'))
-    map_data = map_data_json_string['data']
-    map_layout = map_data_json_string['layout']
-    
-    return map_data, map_layout    
+def store_geojson(region):        
+    return geojson_collection[region]
 
-# Update map on clientside.
+@app.callback(
+
+    Output('key-figures-finland-locations-x','data'),
+    Output('key-figures-finland-zs-x','data'),
+    Input('key-figures-finland-key-figure-selection-x','value'),
+    Input('key-figures-finland-region-selection-x','value')     
+    
+)
+def store_data(key_figure, region):
+    df = data_collection[region][key_figure]
+    return list(df.index), list(df.values)
+
 app.clientside_callback(
 
-    """
-    function(data, layout){    
-        return {
-            'data':data,
-            'layout':layout
-        }
-    }    
-    
-    """,
-    Output('key-figures-finland-region-map-x', 'figure'),
-    [Input('key-figures-finland-map-data-store-x','data'),
-    Input('key-figures-finland-map-layout-store-x','data')]
+"""
+    function(geojson, locations, z){           
+       
+        var layout = {
+            'height':800,
+            'mapbox': {'style':'open-street-map','zoom':4.2,'center':{'lat': 64.961093, 'lon': 27.590605}
+            },
+            'margin':{'l':0,'t':0,'b':0,'r':0
+            }
+        };
+        var data = [{            
+            'type':'choroplethmapbox',            
+            'name':'',
+            'subplot': 'mapbox',
+            'geojson':geojson,
+            'locations':locations,
+            'featureidkey':'properties.name',
+            'hovertemplate': '<b>%{location}</b><br>%{z}',
+            'hoverlabel':{'font':{'family':'Arial Black', 'size':20, 'color':'black'},'bgcolor':'white'},
+            'z':z,
+            'colorscale':'Viridis'
+        }];
+
+        return {'data':data,'layout':layout}
+    }   
+
+""",
+Output('key-figures-finland-region-map-x', 'figure'),
+Input('key-figures-finland-geojson-data','data'),
+Input('key-figures-finland-locations-x','data'),
+Input('key-figures-finland-zs-x','data')    
 )
 
+app.layout = serve_layout
 if __name__ == "__main__":
     app.run_server(debug=False)    
