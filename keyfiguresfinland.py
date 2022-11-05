@@ -4,7 +4,7 @@ from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import orjson
-from plotly.io.json import to_json_plotly
+from plotly.io.json import to_json
 
 # Data provided by Statistics Finland.
 regions_data = pd.read_csv('assets/key_figures_regions.csv', encoding = 'latin-1').rename(columns ={'Region 2021':'Region'}).set_index('Region')
@@ -106,9 +106,10 @@ def update_whole_country_header(key_figure):
 )
 def update_map(key_figure):
     
-    map_figure = plot_map(key_figure)        
-    map_data = orjson.loads(to_json_plotly(map_figure))['data']
-    map_layout = orjson.loads(to_json_plotly(map_figure))['layout']
+    map_figure = plot_map(key_figure)
+    map_data_json_string = orjson.loads(to_json(map_figure, engine = 'orjson'))
+    map_data = map_data_json_string['data']
+    map_layout = map_data_json_string['layout']
     
     return map_data, map_layout    
 
