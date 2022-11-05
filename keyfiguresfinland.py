@@ -33,8 +33,7 @@ key_figures = sorted(list(pd.unique(regions_data.columns)))
 
 external_stylesheets = [dbc.themes.SUPERHERO]
 
-app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False
-          )
+app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False)
 app.title = "Finland's Regional Key Figures"
 server = app.server
 
@@ -129,7 +128,7 @@ app.clientside_callback(
             'geojson':geojson,
             'locations':locations,
             'featureidkey':'properties.name',
-            'hovertemplate': '<b>%{location}</b><br>%{z}',
+            'hovertemplate': '<b>%{location}</b><br>%{z:,}',
             'hoverlabel':{'font':{'family':'Arial Black', 'size':20, 'color':'black'},'bgcolor':'white'},
             'z':z,
             'colorscale':'Viridis'
@@ -147,4 +146,4 @@ Input('key-figures-finland-zs-x','data')
 
 app.layout = serve_layout
 if __name__ == "__main__":
-    app.run_server(debug=False)    
+    app.run_server(debug=False)   
