@@ -67,7 +67,27 @@ def serve_layout():
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'center'),
             dbc.Col([
                 html.H1(id = 'key-figures-finland-header-x', style = {'textAlign':'center'}, className="mb-3 mt-3 display-3"),
-                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}))
+                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})),
+                
+                dbc.Row([
+                
+                    dbc.Col([
+                        html.H3('Change map type', className = 'mt-2'),
+                        dcc.Dropdown(id = 'key-figures-finland-map-type-x', 
+                                     options = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"],
+                                     value = "open-street-map",
+                                     multi = False,
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
+                        ]),
+                    dbc.Col([
+                        html.H3('Change colorscale', className = 'mt-2'),
+                        dcc.Dropdown(id = 'key-figures-finland-map-colorscale-x', 
+                                     options = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd'],
+                                     value = "Viridis",
+                                     multi = False,
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
+                        ])
+                    ])
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
 
@@ -112,26 +132,24 @@ def store_data(key_figure, region):
 app.clientside_callback(
 
 """
-    function(geojson, locations, z){           
+    function(geojson, locations, z, map_type, colorscale){           
        
         var layout = {
             'height':800,
-            'mapbox': {'style':'open-street-map','zoom':4.2,'center':{'lat': 64.961093, 'lon': 27.590605}
+            'mapbox': {'style':map_type,'zoom':4.2,'center':{'lat': 64.961093, 'lon': 27.590605}
             },
-            'margin':{'l':0,'t':0,'b':0,'r':0
-            }
+            'margin':{'l':0,'t':0,'b':0,'r':0}
         };
         var data = [{            
             'type':'choroplethmapbox',            
             'name':'',
-            'subplot': 'mapbox',
             'geojson':geojson,
             'locations':locations,
             'featureidkey':'properties.name',
             'hovertemplate': '<b>%{location}</b><br>%{z:,}',
             'hoverlabel':{'font':{'family':'Arial Black', 'size':20, 'color':'black'},'bgcolor':'white'},
             'z':z,
-            'colorscale':'Viridis'
+            'colorscale':colorscale
         }];
 
         return {'data':data,'layout':layout}
@@ -141,7 +159,9 @@ app.clientside_callback(
 Output('key-figures-finland-region-map-x', 'figure'),
 Input('key-figures-finland-geojson-data','data'),
 Input('key-figures-finland-locations-x','data'),
-Input('key-figures-finland-zs-x','data')    
+Input('key-figures-finland-zs-x','data'),
+Input('key-figures-finland-map-type-x', 'value'),
+Input('key-figures-finland-map-colorscale-x', 'value')     
 )
 
 app.layout = serve_layout
