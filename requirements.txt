@@ -3,4 +3,5 @@ pandas
 dash
 dash_bootstrap_components
 orjson
-plotly==5.3.1
+plotly
+requests
