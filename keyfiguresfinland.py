@@ -1083,16 +1083,16 @@ key_figures = sorted(list(pd.unique(regions_data.columns)))
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 
-external_stylesheets = [dbc.themes.SUPERHERO,
+external_stylesheets = [dbc.themes.LUX,
                         dbc.icons.BOOTSTRAP,
                         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
                         dbc_css]
 
 change_theme = ThemeChangerAIO(
     aio_id="key-figures-finland-key-theme-selection-x",
-    radio_props={"value": dbc.themes.SUPERHERO},
+    radio_props={"value": dbc.themes.LUX},
     button_props={
-        "size": "sm",
+        "size": "md",
         "outline": False,
         "style": {"marginTop": ".5rem"},
         "color": "success",
@@ -1296,7 +1296,7 @@ app.layout = dbc.Container([
                         html.H3('Change colorscale', className = 'mt-2'),
                         dcc.Dropdown(id = 'key-figures-finland-map-colorscale-x', 
                                      options = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd'],
-                                     value = "Viridis",
+                                     value = "RdBu",
                                      multi = False,
                                      style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
                         ])
