@@ -1151,7 +1151,7 @@ app.layout = dbc.Container([
                 html.Div(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 mb-3"),
 
                 dcc.Graph(id = 'key-figures-finland-timeseries-x', className="border"),
-                # html.Div(id='key-figures-finland-line-chart-x'),
+               
                 dbc.Row([
                 
                     dbc.Col([
