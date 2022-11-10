@@ -1315,10 +1315,10 @@ def update_timeseries_chart(key_figure, hov_data,
         fig = px.area(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} annually in {loc_string}')
     fig.update_layout(margin = dict(l=0,r=0),
                       hoverlabel=dict(font_size=22),
-                      title = dict(font=dict(size=25),x=.5),
+                      title = dict(font=dict(size=16),x=.5),
                       legend = dict(
                              font = dict(size=14),
-                             title = dict(font_size=18)
+                             title = dict(font_size=16)
                           
                           ),
                       xaxis = dict(tickfont = dict(size = 16),
@@ -1330,7 +1330,7 @@ def update_timeseries_chart(key_figure, hov_data,
     )
     
     
-    print(fig)
+    
     
     return fig
     # print(fig.to_dict()['data'])
