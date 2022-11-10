@@ -1302,7 +1302,7 @@ def update_timeseries_chart(key_figure, hov_data,
 
     dff = dff[dff.dimensions.str.contains(kf)].reset_index()
     
-    loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties')}[len(location)==1]
+    loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties').replace('Muni','muni').replace('Region','region').replace('Sub-r','sub-r')}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap_theme" else template    
 
     name = dff.dimensions.values[0]
