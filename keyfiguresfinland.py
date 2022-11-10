@@ -1084,13 +1084,15 @@ key_figures = sorted(list(pd.unique(regions_data.columns)))
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 
 external_stylesheets = [dbc.themes.SUPERHERO,
+                        dbc.icons.BOOTSTRAP,
+                        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
                         dbc_css]
 
 change_theme = ThemeChangerAIO(
     aio_id="key-figures-finland-key-theme-selection-x",
     radio_props={"value": dbc.themes.SUPERHERO},
     button_props={
-        "size": "lg",
+        "size": "sm",
         "outline": False,
         "style": {"marginTop": ".5rem"},
         "color": "success",
@@ -1113,16 +1115,98 @@ footer = dbc.Card([
     
     ],className ='card text-white bg-secondary mt-5')
 
+
+
+navbar = dbc.Navbar(
+    
+      dbc.Container([
+    
+    dbc.Row([
+        
+        dbc.Col([
+            html.A([
+                html.Img(src = 'assets/gofore_logo_white.svg',
+                          height="60px")
+                ],
+                href = 'https://gofore.com/', 
+                target='_blank')
+            ]),#xl = 4, lg = 4, md = 12, sm = 12),
+   
+        dbc.Col([
+            dbc.NavItem(change_theme),
+            
+            ], align='center')
+
+        
+        ], align='center',
+        className = "d-flex justify-content-start"
+        ),
+    
+
+        
+        html.H2("Finland's Key Figures", style = {'textAlign':'center'}, className = 'fw-bold text-white'),
+        dbc.Row([
+                    dbc.Col(
+                        [
+                         
+                           dbc.Collapse(
+                            dbc.Nav([
+                                
+                                dbc.NavbarBrand("by: Tuomas Poukkula",style={'font-style':'italic'}, className="ms-2"),
+                                dbc.NavItem(dbc.NavLink(html.I(className="bi bi-github"), href="https://github.com/tuopouk/key_figures_in_finland",external_link=True, target='_blank') ),
+                                dbc.NavItem(dbc.NavLink(html.I(className="bi bi bi-twitter"), href="https://twitter.com/TuomasPoukkula",external_link=True, target='_blank') ),
+                                dbc.NavItem(dbc.NavLink(html.I(className="bi bi-linkedin"), href="https://www.linkedin.com/in/tuomaspoukkula/",external_link=True, target='_blank') ),
+                                dbc.NavItem(id = 'email',children = [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",external_link=True, target='_blank')] ),
+                                
+                            ]
+                            ),
+                             id="navbar-collapse",
+                             is_open=False,
+                             navbar=True
+                           )
+                          ]
+                    )
+                ],align="center", className = "d-flex justify-content-end"),
+        
+        # dbc.Row([
+        #     dbc.Col([dbc.DropdownMenu(id ='dd_menu',
+        #                               # size="lg",
+        #                               # menu_variant="dark",
+        #                               children =
+        #                                     [
+        #                                         dbc.DropdownMenuItem('FI',id = 'fi',  href='/'),
+        #                                         dbc.DropdownMenuItem('EN',id = 'en',  href='/en'),
+        #                                           dbc.DropdownMenuItem('SV',id = 'sv',  href='/sv')
+        #                                     ],
+        #         # nav=True,
+        #         label="文 / A"
+        #     )], align = 'center')
+            
+        #       ], align = 'center', className = "d-flex justify-content-end"),
+
+    
+      ],className='d-flex justify-content-between', fluid=True
+        ),
+                            
+    color="primary",
+    dark=True,
+    className = 'navbar fixed-top mb-5'
+    )
+
 app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False)
 app.title = "Finland's Regional Key Figures"
 server = app.server
 
 app.layout = dbc.Container([
     
-        change_theme,
-        html.Div("Finland's Regional Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
-
+        navbar,
+        html.Br(),
+        html.Br(),
+        html.Br(),
+        html.Br(),
+        html.Br(),
         dbc.Row([
+            
             
             dbc.Col([
                 
@@ -1220,7 +1304,7 @@ app.layout = dbc.Container([
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
 
-            ], justify = 'center', className = "m-auto d-flex justify-content-center"),
+            ], justify = 'center', className = "mt-5 d-flex justify-content-center"),
         footer,
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
