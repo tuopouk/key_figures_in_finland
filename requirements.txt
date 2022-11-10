@@ -1,5 +1,4 @@
-dash
-plotly==5.7.0
+dash==2.5.1
 pandas
 dash-iconify
 dash-bootstrap-templates
