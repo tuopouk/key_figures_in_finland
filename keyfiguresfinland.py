@@ -1011,7 +1011,7 @@ def get_time_series_data(region_level, split = 10):
             data.Year = data.Year.astype(int)
             dfs.append(data.set_index('Region'))
         
-            return pd.concat(dfs)
+        return pd.concat(dfs)
 
         
     else:
@@ -1047,6 +1047,10 @@ def get_time_series_data(region_level, split = 10):
 mun_series_data = get_time_series_data('Municipality')
 sub_reg_series_data = get_time_series_data('Sub-region')
 reg_series_data = get_time_series_data('Region')
+
+mun_series_data.dropna(subset='value',axis=0, inplace=True)
+sub_reg_series_data.dropna(subset='value',axis=0, inplace=True)
+reg_series_data.dropna(subset='value',axis=0, inplace=True)
 
 
 whole_country_series_df = reg_series_data.loc['WHOLE COUNTRY']
@@ -1216,6 +1220,10 @@ app.layout = dbc.Container([
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
         dcc.Store(id = 'key-figures-finland-zs-x'),
+        # dcc.Store(id = 'key-figures-finland-hover-data-x'),
+        # dcc.Store(id = 'key-figures-finland-selected-data-x'),
+        # dcc.Store(id = 'key-figures-finland-selected-chart-type-x'),
+        # dcc.Store(id = 'key-figures-finland-selected-chart-template-x'),
         ], fluid = True)    
 
 
@@ -1224,7 +1232,7 @@ app.layout = dbc.Container([
     Output('key-figures-finland-line-chart-x', 'children'),
     Input('key-figures-finland-key-figure-selection-x', 'value'),
     Input('key-figures-finland-region-map-x', 'hoverData'),
-    # Input('key-figures-finland-region-map-x', 'clickData'),
+    Input('key-figures-finland-region-map-x', 'clickData'),
     Input('key-figures-finland-region-map-x', 'selectedData'),
     Input('key-figures-finland-chart-selection-x','value'),
     Input(ThemeChangerAIO.ids.radio("key-figures-finland-key-theme-selection-x"), "value"),
@@ -1234,11 +1242,13 @@ app.layout = dbc.Container([
     
 )
 def update_timeseries_chart(key_figure, hov_data,
-                            # click_data, 
+                            click_data, 
                             sel_data,  chart_type, theme, template, region):
     
     
     kf = ', '.join(key_figure.split(', ')[:-1])
+
+    
     dff = whole_country_series_df[whole_country_series_df.dimensions == kf].dropna().reset_index()
     
 
@@ -1247,9 +1257,9 @@ def update_timeseries_chart(key_figure, hov_data,
         
         location = sorted([point['location'] for point in sel_data['points']])
         
-    # elif click_data is not None:
+    elif click_data is not None:
         
-    #     location = [click_data['points'][0]['location']]
+        location = [click_data['points'][0]['location']]
     
     elif hov_data is not None:
         
@@ -1262,10 +1272,15 @@ def update_timeseries_chart(key_figure, hov_data,
         
     try:
         dff = timeseries_data[region].loc[location]
+        # print(dff)
     except:
         dff = dff
-        
-    dff = dff[dff.dimensions == kf].dropna().reset_index()
+    
+
+    dff = dff[dff.dimensions.str.contains(kf)].reset_index()
+    
+    
+    
 
     loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties')}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap_theme" else template    
@@ -1280,6 +1295,21 @@ def update_timeseries_chart(key_figure, hov_data,
 @app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'),Input('key-figures-finland-region-selection-x', 'value') )
 def update_header(key_figure, region_level):
     return f"{key_figure} by {region_level}".capitalize()
+
+# @app.callback(Output('key-figures-finland-hover-data-x','data'), Input('key-figures-finland-region-map-x', 'hoverData'))
+# def update_hover_data(hov_data):
+#     if hov_data is not None:
+#         return [hov_data['points'][0]['location']]
+#     else:
+#         return None
+
+# @app.callback(Output('key-figures-finland-selected-data-x','data'), Input('key-figures-finland-region-map-x', 'selectedData'))
+# def update_selected_data(sel_data):
+#     if sel_data is not None:
+#         return sorted([point['location'] for point in sel_data['points']])
+#     else:
+#         return None
+
 
 @app.callback(Output('key-figures-finland-whole-country-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'))
 def update_whole_country_header(key_figure):
@@ -1328,11 +1358,12 @@ def store_geojson(region):
 
 @app.callback(
     Output('key-figures-finland-region-map-x', 'selectedData'),
+    Output('key-figures-finland-region-map-x', 'clickData'),
     Input('key-figures-finland-region-selection-x','value'),
     Input('key-figures-finland-key-figure-selection-x', 'value')
 )
 def reset_map_selections(kf, reg):        
-    return None
+    return None, None
 
 @app.callback(
 
