@@ -1225,36 +1225,37 @@ app.layout = dbc.Container([
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
         dcc.Store(id = 'key-figures-finland-zs-x'),
-        dcc.Store(id = 'key-figures-finland-clientside-figure-store-x')
+        #dcc.Store(id = 'key-figures-finland-clientside-figure-store-x')
 
         ], fluid = True, className = 'dbc')    
 
 
-app.clientside_callback(
-    """
-    function(figure) {
-        if(figure === undefined) {
-            return {'data': [], 'layout': {}};
-        }
-        const fig = Object.assign({}, figure, {
-            'layout': {
-                ...figure.layout,
-                'yaxis': {
-                    ...figure.layout.yaxis
-                }
-             }
-        });
-        return fig;
-    }
-    """,
-    Output('key-figures-finland-timeseries-x', 'figure'),
-    Input('key-figures-finland-clientside-figure-store-x', 'data')
-)
+#app.clientside_callback(
+#    """
+#   function(figure) {
+#       if(figure === undefined) {
+#            return {'data': [], 'layout': {}};
+#       }
+#       const fig = Object.assign({}, figure, {
+#          'layout': {
+#               ...figure.layout,
+#               'yaxis': {
+#                    ...figure.layout.yaxis
+#                }
+#             }
+#        });
+#        return fig;
+#    }
+#    """,
+#    Output('key-figures-finland-timeseries-x', 'figure'),
+#    Input('key-figures-finland-clientside-figure-store-x', 'data')
+#)
 
 @app.callback(
 
     
-    Output('key-figures-finland-clientside-figure-store-x', 'data'),
+    #Output('key-figures-finland-clientside-figure-store-x', 'data'),
+    Output('key-figures-finland-timeseries-x','figure'),
     Input('key-figures-finland-key-figure-selection-x', 'value'),
     Input('key-figures-finland-region-map-x', 'hoverData'),
     Input('key-figures-finland-region-map-x', 'clickData'),
