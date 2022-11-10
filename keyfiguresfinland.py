@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
-from dash import Dash, dcc, html, Input, Output
+import numpy as np
+from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
+from dash_iconify import DashIconify
 import plotly.express as px
 import orjson
 import requests
@@ -496,9 +499,564 @@ regions_data = get_data('Region')
 
 whole_country_df = municipal_data.loc['WHOLE COUNTRY']
 
+# Whole country figures on a pandas Dataframe.
+# Extract information from the key figure names.
+whole_country_df = pd.DataFrame(regions_data.loc['WHOLE COUNTRY'])
+whole_country_df = whole_country_df.rename(columns = {'WHOLE COUNTRY':'value'})
+whole_country_df['year'] = [stat.split(', ')[-1] for stat in whole_country_df.index]
+whole_country_df['unit'] = [stat.split(', ')[-2] if len(stat.split(', ')) > 2 else '' for stat in whole_country_df.index]
+whole_country_df['stat_name'] = [stat.split(', ')[0] if len(stat.split(', ')) < 4 else ', '.join(stat.split(', ')[:2]) for stat in whole_country_df.index]
+
 municipal_data.drop('WHOLE COUNTRY', axis=0, inplace = True)
 subregions_data.drop('WHOLE COUNTRY', axis=0, inplace = True)
 regions_data.drop('WHOLE COUNTRY', axis=0, inplace = True)
+
+
+
+series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_aikasarja.px"
+
+# Municipality timeseries body
+
+mun_series_payload = {
+  "query": [
+    {
+      "code": "Alue 2021",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "020",
+          "005",
+          "009",
+          "010",
+          "016",
+          "018",
+          "019",
+          "035",
+          "043",
+          "046",
+          "047",
+          "049",
+          "050",
+          "051",
+          "052",
+          "060",
+          "061",
+          "062",
+          "065",
+          "069",
+          "071",
+          "072",
+          "074",
+          "075",
+          "076",
+          "077",
+          "078",
+          "079",
+          "081",
+          "082",
+          "086",
+          "111",
+          "090",
+          "091",
+          "097",
+          "098",
+          "102",
+          "103",
+          "105",
+          "106",
+          "108",
+          "109",
+          "139",
+          "140",
+          "142",
+          "143",
+          "145",
+          "146",
+          "153",
+          "148",
+          "149",
+          "151",
+          "152",
+          "165",
+          "167",
+          "169",
+          "170",
+          "171",
+          "172",
+          "176",
+          "177",
+          "178",
+          "179",
+          "181",
+          "182",
+          "186",
+          "202",
+          "204",
+          "205",
+          "208",
+          "211",
+          "213",
+          "214",
+          "216",
+          "217",
+          "218",
+          "224",
+          "226",
+          "230",
+          "231",
+          "232",
+          "233",
+          "235",
+          "236",
+          "239",
+          "240",
+          "320",
+          "241",
+          "322",
+          "244",
+          "245",
+          "249",
+          "250",
+          "256",
+          "257",
+          "260",
+          "261",
+          "263",
+          "265",
+          "271",
+          "272",
+          "273",
+          "275",
+          "276",
+          "280",
+          "284",
+          "285",
+          "286",
+          "287",
+          "288",
+          "290",
+          "291",
+          "295",
+          "297",
+          "300",
+          "301",
+          "304",
+          "305",
+          "312",
+          "316",
+          "317",
+          "318",
+          "398",
+          "399",
+          "400",
+          "407",
+          "402",
+          "403",
+          "405",
+          "408",
+          "410",
+          "416",
+          "417",
+          "418",
+          "420",
+          "421",
+          "422",
+          "423",
+          "425",
+          "426",
+          "444",
+          "430",
+          "433",
+          "434",
+          "435",
+          "436",
+          "438",
+          "440",
+          "441",
+          "475",
+          "478",
+          "480",
+          "481",
+          "483",
+          "484",
+          "489",
+          "491",
+          "494",
+          "495",
+          "498",
+          "499",
+          "500",
+          "503",
+          "504",
+          "505",
+          "508",
+          "507",
+          "529",
+          "531",
+          "535",
+          "536",
+          "538",
+          "541",
+          "543",
+          "545",
+          "560",
+          "561",
+          "562",
+          "563",
+          "564",
+          "309",
+          "576",
+          "577",
+          "578",
+          "445",
+          "580",
+          "581",
+          "599",
+          "583",
+          "854",
+          "584",
+          "588",
+          "592",
+          "593",
+          "595",
+          "598",
+          "601",
+          "604",
+          "607",
+          "608",
+          "609",
+          "611",
+          "638",
+          "614",
+          "615",
+          "616",
+          "619",
+          "620",
+          "623",
+          "624",
+          "625",
+          "626",
+          "630",
+          "631",
+          "635",
+          "636",
+          "678",
+          "710",
+          "680",
+          "681",
+          "683",
+          "684",
+          "686",
+          "687",
+          "689",
+          "691",
+          "694",
+          "697",
+          "698",
+          "700",
+          "702",
+          "704",
+          "707",
+          "729",
+          "732",
+          "734",
+          "736",
+          "790",
+          "738",
+          "739",
+          "740",
+          "742",
+          "743",
+          "746",
+          "747",
+          "748",
+          "791",
+          "749",
+          "751",
+          "753",
+          "755",
+          "758",
+          "759",
+          "761",
+          "762",
+          "765",
+          "766",
+          "768",
+          "771",
+          "777",
+          "778",
+          "781",
+          "783",
+          "831",
+          "832",
+          "833",
+          "834",
+          "837",
+          "844",
+          "845",
+          "846",
+          "848",
+          "849",
+          "850",
+          "851",
+          "853",
+          "857",
+          "858",
+          "859",
+          "886",
+          "887",
+          "889",
+          "890",
+          "892",
+          "893",
+          "895",
+          "785",
+          "905",
+          "908",
+          "092",
+          "915",
+          "918",
+          "921",
+          "922",
+          "924",
+          "925",
+          "927",
+          "931",
+          "934",
+          "935",
+          "936",
+          "941",
+          "946",
+          "976",
+          "977",
+          "980",
+          "981",
+          "989",
+          "992"
+        ]
+      }
+    },
+    {
+      "code": "Vuosi",
+      "selection": {
+        "filter": "item"
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}
+
+# Region timeseries body
+reg_series_payload = {
+  "query": [
+    {
+      "code": "Alue 2021",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "SSS",
+          "MK01",
+          "MK02",
+          "MK04",
+          "MK05",
+          "MK06",
+          "MK07",
+          "MK08",
+          "MK09",
+          "MK10",
+          "MK11",
+          "MK12",
+          "MK13",
+          "MK14",
+          "MK15",
+          "MK16",
+          "MK17",
+          "MK18",
+          "MK19",
+          "MK21"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}
+# Sub-region timeseries body
+subreg_series_payload = {
+  "query": [
+    {
+      "code": "Alue 2021",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "SK011",
+          "SK014",
+          "SK015",
+          "SK016",
+          "SK021",
+          "SK022",
+          "SK023",
+          "SK024",
+          "SK025",
+          "SK041",
+          "SK043",
+          "SK044",
+          "SK051",
+          "SK052",
+          "SK053",
+          "SK061",
+          "SK063",
+          "SK064",
+          "SK068",
+          "SK069",
+          "SK071",
+          "SK081",
+          "SK082",
+          "SK091",
+          "SK093",
+          "SK101",
+          "SK103",
+          "SK105",
+          "SK111",
+          "SK112",
+          "SK113",
+          "SK114",
+          "SK115",
+          "SK122",
+          "SK124",
+          "SK125",
+          "SK131",
+          "SK132",
+          "SK133",
+          "SK134",
+          "SK135",
+          "SK138",
+          "SK141",
+          "SK142",
+          "SK144",
+          "SK146",
+          "SK152",
+          "SK153",
+          "SK154",
+          "SK161",
+          "SK162",
+          "SK171",
+          "SK173",
+          "SK174",
+          "SK175",
+          "SK176",
+          "SK177",
+          "SK178",
+          "SK181",
+          "SK182",
+          "SK191",
+          "SK192",
+          "SK193",
+          "SK194",
+          "SK196",
+          "SK197",
+          "SK211",
+          "SK212",
+          "SK213"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}
+
+time_series_queries = {'Region':reg_series_payload,
+           'Sub-region':subreg_series_payload,
+            'Municipality':mun_series_payload
+           }
+
+def get_time_series_data(region_level, split = 10):
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+ 'Content-Type': 'application/json'}
+    
+    if region_level == 'Municipality':
+        
+        year_lists = np.array_split([str(c) for c in requests.get(series_url).json()['variables'][-1]['values']], split)
+        
+        dfs = []
+        
+        for year_list in year_lists:
+            mun_series_payload['query'][-1]['selection'] = {'filter': 'item', 'values': list(year_list)}
+            
+            json = requests.post(series_url, json = mun_series_payload, headers = headers).json()
+            cities = list(json['dimension']['Alue 2021']['category']['label'].values())
+    
+            dimensions = list(json['dimension']['Tiedot']['category']['label'].values())
+            years = list(json['dimension']['Vuosi']['category']['label'].values())
+            
+            values = json['value']
+
+            cities_df = pd.DataFrame(cities, columns = ['Region'])
+            cities_df['index'] = 0
+            dimensions_df = pd.DataFrame(dimensions, columns = ['dimensions'])
+            dimensions_df['index'] = 0
+            years_df = pd.DataFrame(years, columns = ['Year'])
+            years_df['index'] = 0
+
+            data = pd.merge(left = pd.merge(left = cities_df, right = dimensions_df, on = 'index', how = 'outer'),
+                            right = years_df, how = 'outer', on = 'index').drop('index',axis = 1)
+
+            data['value'] = values
+            data.Year = data.Year.astype(int)
+            dfs.append(data.set_index('Region'))
+        
+            return pd.concat(dfs)
+
+        
+    else:
+    
+        json = requests.post(series_url, json = time_series_queries[region_level], headers = headers).json()
+
+
+
+        cities = list(json['dimension']['Alue 2021']['category']['label'].values())
+
+        dimensions = list(json['dimension']['Tiedot']['category']['label'].values())
+        years = list(json['dimension']['Vuosi']['category']['label'].values())
+
+
+
+        values = json['value']
+
+        cities_df = pd.DataFrame(cities, columns = ['Region'])
+        cities_df['index'] = 0
+        dimensions_df = pd.DataFrame(dimensions, columns = ['dimensions'])
+        dimensions_df['index'] = 0
+        years_df = pd.DataFrame(years, columns = ['Year'])
+        years_df['index'] = 0
+
+        data = pd.merge(left = pd.merge(left = cities_df, right = dimensions_df, on = 'index', how = 'outer'),
+                        right = years_df, how = 'outer', on = 'index').drop('index',axis = 1)
+
+        data['value'] = values
+        data.Year = data.Year.astype(int)
+    
+        return data.set_index('Region')
+
+mun_series_data = get_time_series_data('Municipality')
+sub_reg_series_data = get_time_series_data('Sub-region')
+reg_series_data = get_time_series_data('Region')
+
+
+whole_country_series_df = reg_series_data.loc['WHOLE COUNTRY']
+
+reg_series_data.drop('WHOLE COUNTRY', axis=0, inplace = True)
+
+timeseries_data = {'Region':reg_series_data,
+            'Sub-region':sub_reg_series_data,
+            'Municipality':mun_series_data
+           }
 
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
@@ -520,41 +1078,116 @@ key_figures = sorted(list(pd.unique(regions_data.columns)))
 
 external_stylesheets = [dbc.themes.SUPERHERO]
 
+change_theme = ThemeChangerAIO(
+    aio_id="key-figures-finland-key-theme-selection-x",
+    radio_props={"value": dbc.themes.SUPERHERO},
+    button_props={
+        "size": "lg",
+        "outline": False,
+        "style": {"marginTop": ".5rem"},
+        "color": "success",
+    },
+)
+
+footer = dbc.Card([
+        html.Br(),
+        
+        dbc.Row([
+            
+            dbc.Col(dbc.NavLink(DashIconify(icon="logos:github"), href="https://github.com/tuopouk/key_figures_in_finland",external_link=True, target='_blank',className="btn btn-link btn-floating btn-lg text-dark m-1"),className="mb-4" ,xl=1,lg=1,md=4,sm=4,xs=4),
+            dbc.Col(dbc.NavLink(DashIconify(icon="logos:twitter"), href="https://twitter.com/TuomasPoukkula",external_link=True, target='_blank',className="btn btn-link btn-floating btn-lg text-dark m-1"),className="mb-4",xl=1,lg=1,md=4,sm=4,xs=4   ),
+            dbc.Col(dbc.NavLink(DashIconify(icon="logos:linkedin"), href="https://www.linkedin.com/in/tuomaspoukkula/",external_link=True, target='_blank',className="btn btn-link btn-floating btn-lg text-dark m-1"),className="mb-4",xl=1,lg=1,md=4,sm=4,xs=4  )
+            
+            
+            
+            ],className ="d-flex justify-content-center align-items-center", justify='center',align='center')
+    
+    
+    ],className ='card text-white bg-secondary mt-5')
+
 app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False)
 app.title = "Finland's Regional Key Figures"
 server = app.server
 
-def serve_layout():
+app.layout = dbc.Container([
     
-    return dbc.Container([
-        
+        change_theme,
         html.Div("Finland's Regional Key Figures",style={'textAlign':'center'}, className="mb-3 mt-3 fw-bold display-1"),
 
         dbc.Row([
             
             dbc.Col([
-                html.H2('Key figure'),
-                dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-x',
-                             options = [{'label':kf, 'value':kf} for kf in key_figures],
-                             value = "Degree of urbanisation, %, 2020",
-                             multi = False,
-                             style = {'font-size':20, 'font-family':'Arial','color': 'black'}
-                             ),
-                html.Br(),
-                html.H2('Regional level'),
-                dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
-                             options = [{'label':region, 'value':region} for region in data_collection.keys()],
-                             value = 'Region',
-                             multi = False,
-                             style = {'font-size':20, 'font-family':'Arial','color': 'black'}
-                             ),
-                html.H1(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 display-2"),
-                html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center fs-3 text"),
+                
+                dbc.Row([
+                    
+                    dbc.Col([
+                    
+                        html.H2('Key figure'),
+                        dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-x',
+                                     options = [{'label':kf, 'value':kf} for kf in key_figures],
+                                     value = "Degree of urbanisation, %, 2020",
+                                     multi = False,
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
+                                     )
+                        ]),
+                    dbc.Col([
+                        html.H2('Regional level'),
+                        dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
+                                     options = [{'label':region, 'value':region} for region in data_collection.keys()],
+                                     value = 'Region',
+                                     multi = False,
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
+                                     )
+                        ])
+                    ]),
+                html.Div(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 mb-3"),
+
+                html.Div(id = 'key-figures-finland-line-chart-x'),
+                dbc.Row([
+                
+                    dbc.Col([
+                        html.H3('Change chart type', className = 'mt-2'),
+                        dcc.Dropdown(id = 'key-figures-finland-chart-selection-x',
+                                     options = ['line','area'],
+                                     value = 'line',
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
+                                     )
+                        
+                        ]),
+                    dbc.Col([
+                        
+                        html.H3('Change chart template', className = 'mt-2'),
+                        dcc.Dropdown(id = 'key-figures-finland-chart-template-x',
+                                     options = sorted([
+                                         "bootstrap_theme",
+                                         "plotly",
+                                         "ggplot2",
+                                         "seaborn",
+                                         "simple_white",
+                                         "plotly_white",
+                                         "plotly_dark",
+                                         "presentation",
+                                         "xgridoff",
+                                         "ygridoff",
+                                         "gridon",
+                                         "none",
+                                     ]),
+                                     value = "bootstrap_theme",
+                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
+                                     )
+                        
+                    ])
+                    
+                ]),
+                html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center fs-3 text mt-3"),
                 
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'center'),
             dbc.Col([
                 html.H1(id = 'key-figures-finland-header-x', style = {'textAlign':'center'}, className="mb-3 mt-3 display-3"),
-                dcc.Graph(id = 'key-figures-finland-region-map-x', figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605})),
+                dcc.Graph(id = 'key-figures-finland-region-map-x', 
+                          figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
+                          clear_on_unhover=True,
+                          className = 'border'),
                 
                 dbc.Row([
                 
@@ -579,11 +1212,70 @@ def serve_layout():
                 ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
 
             ], justify = 'center', className = "m-auto d-flex justify-content-center"),
+        footer,
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
         dcc.Store(id = 'key-figures-finland-zs-x'),
         ], fluid = True)    
 
+
+@app.callback(
+
+    Output('key-figures-finland-line-chart-x', 'children'),
+    Input('key-figures-finland-key-figure-selection-x', 'value'),
+    Input('key-figures-finland-region-map-x', 'hoverData'),
+    # Input('key-figures-finland-region-map-x', 'clickData'),
+    Input('key-figures-finland-region-map-x', 'selectedData'),
+    Input('key-figures-finland-chart-selection-x','value'),
+    Input(ThemeChangerAIO.ids.radio("key-figures-finland-key-theme-selection-x"), "value"),
+    Input('key-figures-finland-chart-template-x','value'),
+    State('key-figures-finland-region-selection-x','value')
+    
+    
+)
+def update_timeseries_chart(key_figure, hov_data,
+                            # click_data, 
+                            sel_data,  chart_type, theme, template, region):
+    
+    
+    kf = ', '.join(key_figure.split(', ')[:-1])
+    dff = whole_country_series_df[whole_country_series_df.dimensions == kf].dropna().reset_index()
+    
+
+    
+    if sel_data is not None:
+        
+        location = sorted([point['location'] for point in sel_data['points']])
+        
+    # elif click_data is not None:
+        
+    #     location = [click_data['points'][0]['location']]
+    
+    elif hov_data is not None:
+        
+        location = [hov_data['points'][0]['location']]
+     
+    else:
+        
+        location = ['Finland']
+        
+        
+    try:
+        dff = timeseries_data[region].loc[location]
+    except:
+        dff = dff
+        
+    dff = dff[dff.dimensions == kf].dropna().reset_index()
+
+    loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties')}[len(location)==1]
+    template = template_from_url(theme) if template == "bootstrap_theme" else template    
+    
+    if chart_type == 'line':    
+        fig = px.line(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
+    else:
+        fig = px.area(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
+    fig.update_layout(margin = dict(l=0,r=0))
+    return dcc.Graph(id = 'key-figures-finland-timeseries-x', figure = fig, className="border")
 
 @app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'),Input('key-figures-finland-region-selection-x', 'value') )
 def update_header(key_figure, region_level):
@@ -591,11 +1283,40 @@ def update_header(key_figure, region_level):
 
 @app.callback(Output('key-figures-finland-whole-country-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'))
 def update_whole_country_header(key_figure):
-    kf_string = key_figure.split(',')
-    kf_string.pop(-2)
-    kf_string = ', '.join(kf_string)
-    kf_string = {True:key_figure, False:kf_string}[len(kf_string.split(','))==1]
-    return html.P([kf_string,html.Br(),"in Finland:",html.Br(), ("{:,}".format(whole_country_df.loc[key_figure])).replace('.0','').replace(',',' ')+key_figure.split(',')[-2].replace('2020','').replace('2021','').replace(key_figure.split(',')[0],'')],className="fw-bold")
+    # Get all the header components.
+    dff = whole_country_df.loc[key_figure]
+    stat_name = dff.stat_name
+    stat_unit = dff.unit
+    stat_year = dff.year
+    stat_value = dff.value
+    
+    # Change values with no decimals (.0) to int.
+    stat_value = {True: int(stat_value), False: stat_value}['.0' in str(stat_value)]
+    # Use space as thousand separator.
+    stat_value = "{:,}".format(stat_value).replace(',',' ')
+    
+    return dbc.Card(
+        [
+            dbc.Row([
+                dbc.Col([
+                    dbc.CardBody([
+                        html.Div([stat_name, ", ", stat_year, " in Finland:"], className="card-title text-primary display-3")
+                        ])
+                    ],sm = 12, md = 12, lg = 7, xl = 7, xxl = 7),
+                dbc.Col([
+                    dbc.CardBody([
+                        html.Span([stat_value, " ", stat_unit], className="card-text text-info display-2")
+                        ])
+                    ],sm = 12, md = 12,lg = 5, xl = 5, xxl = 5, align = 'center')
+                ])
+                    
+            # dbc.CardBody([
+            #     html.Div([stat_name, ", ", stat_year, " in Finland:"], className="card-title"),
+            #     html.Div("in Finland:", className="card-title"),
+            #     html.Span([stat_value, " ", stat_unit], className="card-text text-info")
+            # ])
+        ], className = 'border'
+    )
 
 @app.callback(
     Output('key-figures-finland-geojson-data','data'),
@@ -603,6 +1324,15 @@ def update_whole_country_header(key_figure):
 )
 def store_geojson(region):        
     return geojson_collection[region]
+
+
+@app.callback(
+    Output('key-figures-finland-region-map-x', 'selectedData'),
+    Input('key-figures-finland-region-selection-x','value'),
+    Input('key-figures-finland-key-figure-selection-x', 'value')
+)
+def reset_map_selections(kf, reg):        
+    return None
 
 @app.callback(
 
@@ -651,6 +1381,5 @@ Input('key-figures-finland-map-type-x', 'value'),
 Input('key-figures-finland-map-colorscale-x', 'value')     
 )
 
-app.layout = serve_layout
 if __name__ == "__main__":
     app.run_server(debug=False)   
