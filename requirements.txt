@@ -5,5 +5,5 @@ dash_bootstrap_components
 orjson
 plotly
 requests
-dash_iconify
 dash_bootstrap_templates
+dash-iconify
