@@ -9,6 +9,7 @@ import plotly.express as px
 import orjson
 import requests
 
+
 # Query url
 url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
 
@@ -1080,7 +1081,10 @@ data_collection =  {'Municipality':municipal_data, 'Region':regions_data,'Sub-re
 
 key_figures = sorted(list(pd.unique(regions_data.columns)))
 
-external_stylesheets = [dbc.themes.SUPERHERO]
+dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
+
+external_stylesheets = [dbc.themes.SUPERHERO,
+                        dbc_css]
 
 change_theme = ThemeChangerAIO(
     aio_id="key-figures-finland-key-theme-selection-x",
@@ -1146,7 +1150,8 @@ app.layout = dbc.Container([
                     ]),
                 html.Div(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 mb-3"),
 
-                html.Div(id = 'key-figures-finland-line-chart-x'),
+                dcc.Graph(id = 'key-figures-finland-timeseries-x', className="border"),
+                # html.Div(id='key-figures-finland-line-chart-x'),
                 dbc.Row([
                 
                     dbc.Col([
@@ -1220,16 +1225,36 @@ app.layout = dbc.Container([
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
         dcc.Store(id = 'key-figures-finland-zs-x'),
-        # dcc.Store(id = 'key-figures-finland-hover-data-x'),
-        # dcc.Store(id = 'key-figures-finland-selected-data-x'),
-        # dcc.Store(id = 'key-figures-finland-selected-chart-type-x'),
-        # dcc.Store(id = 'key-figures-finland-selected-chart-template-x'),
-        ], fluid = True)    
+        dcc.Store(id = 'key-figures-finland-clientside-figure-store-x')
 
+        ], fluid = True, className = 'dbc')    
+
+
+app.clientside_callback(
+    """
+    function(figure) {
+        if(figure === undefined) {
+            return {'data': [], 'layout': {}};
+        }
+        const fig = Object.assign({}, figure, {
+            'layout': {
+                ...figure.layout,
+                'yaxis': {
+                    ...figure.layout.yaxis
+                }
+             }
+        });
+        return fig;
+    }
+    """,
+    Output('key-figures-finland-timeseries-x', 'figure'),
+    Input('key-figures-finland-clientside-figure-store-x', 'data')
+)
 
 @app.callback(
 
-    Output('key-figures-finland-line-chart-x', 'children'),
+    
+    Output('key-figures-finland-clientside-figure-store-x', 'data'),
     Input('key-figures-finland-key-figure-selection-x', 'value'),
     Input('key-figures-finland-region-map-x', 'hoverData'),
     Input('key-figures-finland-region-map-x', 'clickData'),
@@ -1251,8 +1276,6 @@ def update_timeseries_chart(key_figure, hov_data,
     
     dff = whole_country_series_df[whole_country_series_df.dimensions == kf].dropna().reset_index()
     
-
-    
     if sel_data is not None:
         
         location = sorted([point['location'] for point in sel_data['points']])
@@ -1272,43 +1295,31 @@ def update_timeseries_chart(key_figure, hov_data,
         
     try:
         dff = timeseries_data[region].loc[location]
-        # print(dff)
+        
     except:
         dff = dff
     
 
     dff = dff[dff.dimensions.str.contains(kf)].reset_index()
     
-    
-    
-
     loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties')}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap_theme" else template    
+
     
     if chart_type == 'line':    
         fig = px.line(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
     else:
         fig = px.area(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
     fig.update_layout(margin = dict(l=0,r=0))
-    return dcc.Graph(id = 'key-figures-finland-timeseries-x', figure = fig, className="border")
+    return fig
+    # print(fig.to_dict()['data'])
+    
+    # return dcc.Graph(id = 'key-figures-finland-timeseries-x', figure = fig, className="border")
 
 @app.callback(Output('key-figures-finland-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'),Input('key-figures-finland-region-selection-x', 'value') )
 def update_header(key_figure, region_level):
     return f"{key_figure} by {region_level}".capitalize()
 
-# @app.callback(Output('key-figures-finland-hover-data-x','data'), Input('key-figures-finland-region-map-x', 'hoverData'))
-# def update_hover_data(hov_data):
-#     if hov_data is not None:
-#         return [hov_data['points'][0]['location']]
-#     else:
-#         return None
-
-# @app.callback(Output('key-figures-finland-selected-data-x','data'), Input('key-figures-finland-region-map-x', 'selectedData'))
-# def update_selected_data(sel_data):
-#     if sel_data is not None:
-#         return sorted([point['location'] for point in sel_data['points']])
-#     else:
-#         return None
 
 
 @app.callback(Output('key-figures-finland-whole-country-header-x','children'),Input('key-figures-finland-key-figure-selection-x', 'value'))
@@ -1339,12 +1350,6 @@ def update_whole_country_header(key_figure):
                         ])
                     ],sm = 12, md = 12,lg = 5, xl = 5, xxl = 5, align = 'center')
                 ])
-                    
-            # dbc.CardBody([
-            #     html.Div([stat_name, ", ", stat_year, " in Finland:"], className="card-title"),
-            #     html.Div("in Finland:", className="card-title"),
-            #     html.Span([stat_value, " ", stat_unit], className="card-text text-info")
-            # ])
         ], className = 'border'
     )
 
