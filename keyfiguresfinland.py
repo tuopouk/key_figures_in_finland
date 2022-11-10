@@ -1305,12 +1305,33 @@ def update_timeseries_chart(key_figure, hov_data,
     loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties')}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap_theme" else template    
 
+    name = dff.dimensions.values[0]
+    dff = dff.rename(columns = {'value':name, 'Region':region})
     
     if chart_type == 'line':    
-        fig = px.line(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
+        fig = px.line(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} annually in {loc_string}')
+        fig.update_traces(line=dict(width=4))
     else:
-        fig = px.area(dff, x = 'Year', y = 'value', color = 'Region', template = template, title = f'{kf} annually in {loc_string}')
-    fig.update_layout(margin = dict(l=0,r=0))
+        fig = px.area(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} annually in {loc_string}')
+    fig.update_layout(margin = dict(l=0,r=0),
+                      hoverlabel=dict(font_size=22),
+                      title = dict(font=dict(size=25),x=.5),
+                      legend = dict(
+                             font = dict(size=14),
+                             title = dict(font_size=18)
+                          
+                          ),
+                      xaxis = dict(tickfont = dict(size = 16),
+                                   title = dict(font=dict(size = 14))
+                      ),
+                      yaxis = dict(tickfont = dict(size = 16),
+                                   title = dict(font=dict(size = 14))
+                      ),
+    )
+    
+    
+    print(fig)
+    
     return fig
     # print(fig.to_dict()['data'])
     
