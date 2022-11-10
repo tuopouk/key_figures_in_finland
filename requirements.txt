@@ -1,4 +1,4 @@
-dash==2.5.1
+dash
 pandas
 dash-iconify
 dash-bootstrap-templates
