@@ -1288,7 +1288,7 @@ app.layout = dbc.Container([
                         html.H3('Change map type', className = 'mt-2'),
                         dcc.Dropdown(id = 'key-figures-finland-map-type-x', 
                                      options = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"],
-                                     value = "open-street-map",
+                                     value = "stamen-terrain",
                                      multi = False,
                                      style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
                         ]),
