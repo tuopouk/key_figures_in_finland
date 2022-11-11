@@ -10,8 +10,7 @@ import orjson
 import requests
 
 
-# Query url
-url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
+
 
 # Municipal query body
 mun_payload = {
@@ -468,7 +467,10 @@ queries = {'Region':reg_payload,
            'Sub-region':sub_reg_payload,
            'Municipality':mun_payload}
 
-def get_data(region_level):
+def get_data(region_level, lang = 'en'):
+    
+    # Query url
+    url = "https://pxdata.stat.fi:443/PxWeb/api/v1/"+lang+"/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
     
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
  'Content-Type': 'application/json'}
@@ -514,7 +516,6 @@ regions_data.drop('WHOLE COUNTRY', axis=0, inplace = True)
 
 
 
-series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_aikasarja.px"
 
 # Municipality timeseries body
 
@@ -976,10 +977,13 @@ time_series_queries = {'Region':reg_series_payload,
             'Municipality':mun_series_payload
            }
 
-def get_time_series_data(region_level, split = 10):
+def get_time_series_data(region_level, lang = 'en', split = 10):
     
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
  'Content-Type': 'application/json'}
+    
+    
+    series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/"+lang+"/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_aikasarja.px"
     
     if region_level == 'Municipality':
         
@@ -1065,15 +1069,15 @@ timeseries_data = {'Region':reg_series_data,
 
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
-with open('assets/municipalities.json', encoding = 'ISO-8859-1') as f:
+with open('assets/municipalities_multilang.json', encoding = 'utf-8') as f:
     municipalities_json = orjson.loads(f.read())
     
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
-with open('assets/regions.json', encoding = 'ISO-8859-1') as f:
+with open('assets/regions_multilang.json', encoding = 'utf-8') as f:
     regions_json = orjson.loads(f.read())
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2021&outputFormat=json    
-with open('assets/sub-regions.json', encoding = 'utf-8') as f:
+with open('assets/subregions_multilang.json', encoding = 'utf-8') as f:
     subregions_json = orjson.loads(f.read())
     
 geojson_collection = {'Municipality':municipalities_json, 'Region':regions_json,'Sub-region': subregions_json}
@@ -1280,6 +1284,7 @@ app.layout = dbc.Container([
                 dcc.Graph(id = 'key-figures-finland-region-map-x', 
                           figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
                           clear_on_unhover=True,
+                          config = {'mapboxAccessToken':'pk.eyJ1IjoiZ3VkdW1hbyIsImEiOiJjanNrZzA5aWoyazU3NDN0Yjl6Y25zend6In0.zkMKSjHPzqG5mQCX-yWdMw'},
                           className = 'border'),
                 
                 dbc.Row([
@@ -1288,7 +1293,7 @@ app.layout = dbc.Container([
                         html.H3('Change map type', className = 'mt-2'),
                         dcc.Dropdown(id = 'key-figures-finland-map-type-x', 
                                      options = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"],
-                                     value = "carto-positron",
+                                     value = "stamen-terrain",
                                      multi = False,
                                      style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
                         ]),
