@@ -1284,7 +1284,6 @@ app.layout = dbc.Container([
                 dcc.Graph(id = 'key-figures-finland-region-map-x', 
                           figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
                           clear_on_unhover=True,
-                          config = {'mapboxAccessToken':'pk.yourowntoken'},
                           className = 'border'),
                 
                 dbc.Row([
