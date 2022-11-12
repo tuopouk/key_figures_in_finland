@@ -1204,8 +1204,8 @@ app.layout = dbc.Container([
                 
         html.H1("Finland's Key Figures", className = 'fw-bold display-1 text-center'),
         
-        dbc.CardBody([
         
+            
             dbc.Row([
                 
                 
@@ -1271,12 +1271,16 @@ app.layout = dbc.Container([
                                                  className = 'text-dark bg-light text-nowrap'
                                                  )
                                     
-                                ])
+                                ]),
+                            
                                 
                             ]),
-                            html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center card-text fs-3 text mt-3")
-                            ])
-                        ]),
+                            
+                            
+                            ]),
+                         dbc.CardFooter(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/', target = '_blank')], className="text-center align-middle card-text fs-3 text mt-3")
+                        
+                        ], style = {'height':'100%'}),
                     
                     ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'start'),
                 dbc.Col([
@@ -1306,15 +1310,17 @@ app.layout = dbc.Container([
                                                  options = sorted(['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']),
                                                  value = "RdBu",
                                                  className = 'text-dark bg-light text-nowrap')
-                                    ])
+                                    ]),
+                                 # dbc.CardFooter(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/', target = '_blank')], className="text-center align-middle card-text fs-3 text mt-3")
                                 ])
-                            ])
-                        ])
+                            ]),
+                         # dbc.CardFooter(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/', target = '_blank')], className="text-center align-middle card-text fs-3 text mt-3")
+                        ], style = {'height':'100%'})
                     
                     ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
     
-                ], justify = 'center', className = "mt-3 d-flex justify-content-center")
-            ]),
+                ], justify = 'center', className = "mt-3 d-flex justify-content-center"),
+            
         
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
@@ -1322,7 +1328,7 @@ app.layout = dbc.Container([
         footer,
         #dcc.Store(id = 'key-figures-finland-clientside-figure-store-x')
 
-        ], fluid = True, className = 'dbc')    
+        ], fluid = True,className = 'dbc')    
 
 
 #app.clientside_callback(
@@ -1405,16 +1411,12 @@ def update_timeseries_chart(key_figure, hov_data,
     dff = dff.rename(columns = {'value':name, 'Region':region})
     
     if chart_type == 'line':    
-        fig = px.line(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} annually in {loc_string}')
+        fig = px.line(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} per year in <b>{loc_string}<b>')
         fig.update_traces(line=dict(width=4))
     else:
-        fig = px.area(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} annually in {loc_string}')
+        fig = px.area(dff, x = 'Year', y = name, color = region, template = template, hover_data = [region,'Year',name], title = f'{kf} per year in <b>{loc_string}<b>')
     fig.update_layout(margin = dict(l=0,r=0),
-                      hoverlabel=dict(font_size=22),
-   
-                      xaxis = dict(tickfont = dict(size = 14)),
-                      
-                      yaxis = dict(tickfont = dict(size = 14)),
+                      hoverlabel=dict(font_size=23)
     )
     
     
@@ -1497,7 +1499,7 @@ app.clientside_callback(
     function(geojson, locations, z, map_type, colorscale){           
        
         var layout = {
-            'height':660,
+            'height':800,
             'mapbox': {'style':map_type,'zoom':4.0,'center':{'lat': 64.961093, 'lon': 27.590605}
             },
             'margin':{'l':0,'t':0,'b':0,'r':0}
