@@ -1289,7 +1289,6 @@ app.layout = dbc.Container([
                             dcc.Graph(id = 'key-figures-finland-region-map-x', 
                               figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
                               clear_on_unhover=True,
-                              
                               className = 'border'),
                     
                             dbc.Row([
@@ -1397,7 +1396,7 @@ def update_timeseries_chart(key_figure, hov_data,
         dff = dff
     
 
-    dff = dff[dff.dimensions.str.contains(kf)].reset_index()
+    dff = dff[dff.dimensions==kf].reset_index()
     
     loc_string = {True:location[0], False: f'selected {region}s'.replace('ty','ties').replace('Muni','muni').replace('Region','region').replace('Sub-r','sub-r')}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap_theme" else template    
