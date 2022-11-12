@@ -1098,13 +1098,12 @@ change_theme = ThemeChangerAIO(
     button_props={
         "size": "md",
         "outline": False,
-        "style": {"marginTop": ".5rem"},
+        # "style": {"marginTop": ".5rem"},
         "color": "success",
     },
 )
 
 footer = dbc.Card([
-        html.Br(),
         
         dbc.Row([
             
@@ -1117,7 +1116,7 @@ footer = dbc.Card([
             ],className ="d-flex justify-content-center align-items-center", justify='center',align='center')
     
     
-    ],className ='card text-white bg-secondary mt-5')
+    ],className ='card text-white bg-secondary mt-3 navbar-static-top')
 
 
 
@@ -1142,13 +1141,11 @@ navbar = dbc.Navbar(
             ], align='center')
 
         
-        ], align='center',
+        ],
         className = "d-flex justify-content-start"
         ),
     
 
-        
-        html.H2("Finland's Key Figures", style = {'textAlign':'center'}, className = 'fw-bold text-white'),
         dbc.Row([
                     dbc.Col(
                         [
@@ -1170,7 +1167,7 @@ navbar = dbc.Navbar(
                            )
                           ]
                     )
-                ],align="center", className = "d-flex justify-content-end"),
+                ], className = "d-flex justify-content-end"),
         
         # dbc.Row([
         #     dbc.Col([dbc.DropdownMenu(id ='dd_menu',
@@ -1189,12 +1186,12 @@ navbar = dbc.Navbar(
         #       ], align = 'center', className = "d-flex justify-content-end"),
 
     
-      ],className='d-flex justify-content-between', fluid=True
+      ],className='d-flex justify-content-between align-middle', fluid=True
         ),
                             
     color="primary",
     dark=True,
-    className = 'navbar fixed-top mb-5'
+    className = 'navbar navbar-default navbar-static-top mb-5'
     )
 
 app = Dash(name = __name__, external_stylesheets = external_stylesheets, prevent_initial_callbacks=False)
@@ -1204,115 +1201,126 @@ server = app.server
 app.layout = dbc.Container([
     
         navbar,
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        dbc.Row([
+                
+        html.H1("Finland's Key Figures", className = 'fw-bold display-1 text-center'),
+        
+        dbc.CardBody([
+        
+            dbc.Row([
+                
+                
+                dbc.Col([
+                    
+                    dbc.Card([
+                        dbc.CardBody([
+                    
+                            dbc.Row([
+                                
+                                dbc.Col([
+                                
+                                    html.H2('Key figure'),
+                                    dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-x',
+                                                 options = key_figures,
+                                                 value = "Degree of urbanisation, %, 2020",
+                                                 className = 'text-dark bg-light text-nowrap'
+                                                 )
+                                    ]),
+                                dbc.Col([
+                                    html.H2('Regional level'),
+                                    dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
+                                                 options = sorted(list(data_collection.keys())),
+                                                 value = 'Region',
+                                                 className = 'text-dark bg-light text-nowrap'
+                                                 )
+                                    ])
+                                ]),
+                            html.Div(id = 'key-figures-finland-whole-country-header-x', className="text-center card-title mt-5 mb-3"),
             
-            
-            dbc.Col([
-                
-                dbc.Row([
-                    
-                    dbc.Col([
-                    
-                        html.H2('Key figure'),
-                        dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-x',
-                                     options = [{'label':kf, 'value':kf} for kf in key_figures],
-                                     value = "Degree of urbanisation, %, 2020",
-                                     multi = False,
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
-                                     )
+                            dcc.Graph(id = 'key-figures-finland-timeseries-x', className="border"),
+                           
+                            dbc.Row([
+                            
+                                dbc.Col([
+                                    html.H3('Change chart type', className = 'mt-2'),
+                                    dcc.Dropdown(id = 'key-figures-finland-chart-selection-x',
+                                                 options = ['area', 'line'],
+                                                 value = 'line',
+                                                 className = 'text-dark bg-light text-nowrap'
+                                                 )
+                                    
+                                    ]),
+                                dbc.Col([
+                                    
+                                    html.H3('Change chart template', className = 'mt-2'),
+                                    dcc.Dropdown(id = 'key-figures-finland-chart-template-x',
+                                                 options = sorted([
+                                                     "bootstrap_theme",
+                                                     "plotly",
+                                                     "ggplot2",
+                                                     "seaborn",
+                                                     "simple_white",
+                                                     "plotly_white",
+                                                     "plotly_dark",
+                                                     "presentation",
+                                                     "xgridoff",
+                                                     "ygridoff",
+                                                     "gridon",
+                                                     "none",
+                                                 ]),
+                                                 value = "bootstrap_theme",
+                                                 className = 'text-dark bg-light text-nowrap'
+                                                 )
+                                    
+                                ])
+                                
+                            ]),
+                            html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center card-text fs-3 text mt-3")
+                            ])
                         ]),
-                    dbc.Col([
-                        html.H2('Regional level'),
-                        dcc.Dropdown(id = 'key-figures-finland-region-selection-x',
-                                     options = [{'label':region, 'value':region} for region in data_collection.keys()],
-                                     value = 'Region',
-                                     multi = False,
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
-                                     )
+                    
+                    ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'start'),
+                dbc.Col([
+                    
+                    dbc.Card([
+                        
+                        dbc.CardBody([
+                    
+                            html.H1(id = 'key-figures-finland-header-x', className="mb-3 mt-3 display-3 card-title text-center"),
+                            dcc.Graph(id = 'key-figures-finland-region-map-x', 
+                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
+                              clear_on_unhover=True,
+                              
+                              className = 'border'),
+                    
+                            dbc.Row([
+                    
+                                dbc.Col([
+                                    html.H3('Change map type', className = 'mt-2'),
+                                    dcc.Dropdown(id = 'key-figures-finland-map-type-x', 
+                                                 options = sorted(["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"]),
+                                                 value = "stamen-terrain",
+                                                 className = 'text-dark bg-light text-nowrap')
+                                    ]),
+                                dbc.Col([
+                                    html.H3('Change colorscale', className = 'mt-2'),
+                                    dcc.Dropdown(id = 'key-figures-finland-map-colorscale-x', 
+                                                 options = sorted(['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']),
+                                                 value = "RdBu",
+                                                 className = 'text-dark bg-light text-nowrap')
+                                    ])
+                                ])
+                            ])
                         ])
-                    ]),
-                html.Div(id = 'key-figures-finland-whole-country-header-x', style = {'textAlign':'center'}, className="mt-5 mb-3"),
-
-                dcc.Graph(id = 'key-figures-finland-timeseries-x', className="border"),
-               
-                dbc.Row([
-                
-                    dbc.Col([
-                        html.H3('Change chart type', className = 'mt-2'),
-                        dcc.Dropdown(id = 'key-figures-finland-chart-selection-x',
-                                     options = ['line','area'],
-                                     value = 'line',
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
-                                     )
-                        
-                        ]),
-                    dbc.Col([
-                        
-                        html.H3('Change chart template', className = 'mt-2'),
-                        dcc.Dropdown(id = 'key-figures-finland-chart-template-x',
-                                     options = sorted([
-                                         "bootstrap_theme",
-                                         "plotly",
-                                         "ggplot2",
-                                         "seaborn",
-                                         "simple_white",
-                                         "plotly_white",
-                                         "plotly_dark",
-                                         "presentation",
-                                         "xgridoff",
-                                         "ygridoff",
-                                         "gridon",
-                                         "none",
-                                     ]),
-                                     value = "bootstrap_theme",
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'}
-                                     )
-                        
-                    ])
                     
-                ]),
-                html.Div(['Data by ',html.A('Statistics Finland', href = 'https://pxdata.stat.fi/PxWeb/pxweb/en/Kuntien_avainluvut/Kuntien_avainluvut__2021/kuntien_avainluvut_2021_viimeisin.px/', target = '_blank')], className="text-center fs-3 text mt-3"),
-                
-                ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'center'),
-            dbc.Col([
-                html.H1(id = 'key-figures-finland-header-x', style = {'textAlign':'center'}, className="mb-3 mt-3 display-3"),
-                dcc.Graph(id = 'key-figures-finland-region-map-x', 
-                          figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
-                          clear_on_unhover=True,
-                          className = 'border'),
-                
-                dbc.Row([
-                
-                    dbc.Col([
-                        html.H3('Change map type', className = 'mt-2'),
-                        dcc.Dropdown(id = 'key-figures-finland-map-type-x', 
-                                     options = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"],
-                                     value = "stamen-terrain",
-                                     multi = False,
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
-                        ]),
-                    dbc.Col([
-                        html.H3('Change colorscale', className = 'mt-2'),
-                        dcc.Dropdown(id = 'key-figures-finland-map-colorscale-x', 
-                                     options = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd'],
-                                     value = "RdBu",
-                                     multi = False,
-                                     style = {'fontSize':'1.2rem', 'color': 'black','whiteSpace': 'nowrap'})
-                        ])
-                    ])
-                
-                ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
-
-            ], justify = 'center', className = "mt-5 d-flex justify-content-center"),
-        footer,
+                    ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
+    
+                ], justify = 'center', className = "mt-3 d-flex justify-content-center")
+            ]),
+        
         dcc.Store(id = 'key-figures-finland-geojson-data', data = geojson_collection['Region']),
         dcc.Store(id = 'key-figures-finland-locations-x'),
         dcc.Store(id = 'key-figures-finland-zs-x'),
+        footer,
         #dcc.Store(id = 'key-figures-finland-clientside-figure-store-x')
 
         ], fluid = True, className = 'dbc')    
@@ -1490,8 +1498,8 @@ app.clientside_callback(
     function(geojson, locations, z, map_type, colorscale){           
        
         var layout = {
-            'height':800,
-            'mapbox': {'style':map_type,'zoom':4.2,'center':{'lat': 64.961093, 'lon': 27.590605}
+            'height':660,
+            'mapbox': {'style':map_type,'zoom':4.0,'center':{'lat': 64.961093, 'lon': 27.590605}
             },
             'margin':{'l':0,'t':0,'b':0,'r':0}
         };
