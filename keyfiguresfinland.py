@@ -1499,7 +1499,7 @@ app.clientside_callback(
     function(geojson, locations, z, map_type, colorscale){           
        
         var layout = {
-            'height':800,
+            'height':660,
             'mapbox': {'style':map_type,'zoom':4.0,'center':{'lat': 64.961093, 'lon': 27.590605}
             },
             'margin':{'l':0,'t':0,'b':0,'r':0}
