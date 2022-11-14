@@ -8,11 +8,14 @@ import plotly.express as px
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
+import os
 
 # try:
 #     locale.setlocale(locale.LC_ALL, 'sv_FI')
 # except:
 #     locale.setlocale(locale.LC_ALL, 'sv-FI')
+
+
 
 register_page(__name__,
               title = "Finlands regionala nyckeltal",
