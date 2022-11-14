@@ -1,1 +1,1 @@
-web: gunicorn keyfiguresfinland:server
+web: gunicorn app:server

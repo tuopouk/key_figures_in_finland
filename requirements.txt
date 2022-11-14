@@ -1,8 +1,9 @@
-dash
-pandas
-dash-iconify
-dash-bootstrap-templates
-dash-bootstrap-components
-requests
-orjson
+dash==2.7.0
+pandas==1.5.1
+dash-iconify==0.1.2
+dash-bootstrap-templates==1.0.7
+dash-bootstrap-components==1.2.1
+dash-extensions==0.1.7
+requests==2.28.1
+orjson==3.8.1
 gunicorn
