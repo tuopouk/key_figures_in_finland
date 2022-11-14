@@ -8,7 +8,6 @@ import orjson
 import requests
 from dash.exceptions import PreventUpdate
 
-token = open(".mapbox_token").read()
 
 register_page(__name__, 
               path='/',
@@ -26,6 +25,10 @@ default_fig = px.scatter(fig_df, x='x',y='y',text='text')
 default_fig.update_traces(mode='text',textfont_size=25)
 default_fig.update_xaxes(showgrid=False, visible=False)
 default_fig.update_yaxes(showgrid=False, visible=False)
+
+token = open(".mapbox_token").read()
+default_map = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}, zoom = 3.8, height = 600, mapbox_style = 'stamen-terrain')
+default_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
  
 def get_data(region_level):
     
@@ -167,7 +170,7 @@ layout = dbc.Container([
                     
                             html.H1(id = 'key-figures-finland-header-en', className="mb-3 mt-3 display-3 card-title text-center"),
                             dcc.Graph(id = 'key-figures-finland-region-map-en',
-                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}, zoom = 3.8, height = 600, mapbox_style = 'stamen-terrain'), 
+                              figure = default_map, 
                               clear_on_unhover=True,
                               config = {'mapboxAccessToken':token,
                                         'locale':'en'
