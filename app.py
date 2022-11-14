@@ -406,14 +406,14 @@ def update_email_topic(label):
 )
 def change_theme_changer_language(pathname):
     
-    if pathname == '/':
+    if pathname == '/fi':
         return 'Vaihda väriteemaa', 'Vaihda väriteemaa', "Valitse jokin alla olevista väriteemoista"
-    elif pathname == '/en':
+    elif pathname == '/':
         return 'Change Color Theme', 'Change Color Theme', "Select a Color Theme"
     elif pathname == '/sv':
         return "Ändra färgtema", "Ändra färgtema", "Välj ett färgtema"
     else:
-        return 'Vaihda väriteemaa', 'Vaihda väriteemaa', "Valitse jokin alla olevista väriteemoista"
+        return 'Change Color Theme', 'Change Color Theme', "Select a Color Theme"
 
 server = app.server
 if __name__ == '__main__':
