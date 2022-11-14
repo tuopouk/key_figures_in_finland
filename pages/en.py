@@ -8,6 +8,7 @@ import plotly.express as px
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
+import os
 
 # try:
 #     locale.setlocale(locale.LC_ALL, 'en_US')
