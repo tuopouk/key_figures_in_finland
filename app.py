@@ -396,7 +396,7 @@ def update_email_topic(label):
     else:
        return [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",external_link=True, target='_blank')] 
 
-@dash.callback(
+@callback(
 
       Output(ThemeChangerAIO.ids.button("key-figures-finland-key-theme-selection-x"), "title"),
       Output(ThemeChangerAIO.ids.button("key-figures-finland-key-theme-selection-x"), "children"),
