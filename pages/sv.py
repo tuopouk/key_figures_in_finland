@@ -15,7 +15,10 @@ import os
 # except:
 #     locale.setlocale(locale.LC_ALL, 'sv-FI')
 
-
+try:
+  token = os.environ.get('.token')
+except:
+  token = ''
 
 register_page(__name__,
               title = "Finlands regionala nyckeltal",
@@ -178,7 +181,8 @@ layout = dbc.Container([
                             dcc.Graph(id = 'key-figures-finland-region-map-sv',
                               figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
                               clear_on_unhover=True,
-                              config = {'locale':'sv'
+                              config = {'locale':'sv',
+                                        'mapboxAccessToken':token
                                         },
                               className = 'border'),
                     
