@@ -354,7 +354,7 @@ def update_timeseries_chart(key_figure,
     except:
         dff = region_df.loc[location].query(f"dimensions=='{kf}'")
     
-    loc_string = {True:(f': {location[0]}').replace(': HELA LANDET',' i Finland'), False: f'utvalda {region}er'.lower()}[len(location)==1]
+    loc_string = {True:(f': {location[0]}').replace(': HELA LANDET',' Finland'), False: f'utvalda {region}er'.lower()}[len(location)==1]
     template = template_from_url(theme) if template == "bootstrap tema" else template    
 
     name = dff['dimensions'].values[0]
