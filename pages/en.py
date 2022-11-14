@@ -98,7 +98,8 @@ layout = dbc.Container([
                                     html.H2('Key figure'),
                                     dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-en',
                                                  options = whole_country_df.index,
-                                                 value = whole_country_df.index[0]
+                                                 value = whole_country_df.index[0],
+                                                 className = 'text-nowrap'
                                                  )
                                     ]),
                                 dbc.Col([
@@ -106,7 +107,7 @@ layout = dbc.Container([
                                     dcc.Dropdown(id = 'key-figures-finland-region-selection-en',
                                                  options = ['Region','Sub-region','Municipality'],
                                                  value = 'Region',
-                                                 className = 'text-dark bg-light text-nowrap'
+                                                 className = 'text-nowrap'
                                                  )
                                     ])
                                 ]),
@@ -125,7 +126,7 @@ layout = dbc.Container([
                                     dcc.Dropdown(id = 'key-figures-finland-chart-selection-en',
                                                  options = ['area', 'line'],
                                                  value = 'line',
-                                                 className = 'text-dark bg-light text-nowrap'
+                                                 className = 'text-nowrap'
                                                  )
                                     
                                     ]),
@@ -148,7 +149,7 @@ layout = dbc.Container([
                                                      "none",
                                                  ]),
                                                  value = "bootstrap_theme",
-                                                 className = 'text-dark bg-light text-nowrap'
+                                                 className = 'text-nowrap'
                                                  )
                                     
                                 ]),
@@ -184,14 +185,14 @@ layout = dbc.Container([
                                     dcc.Dropdown(id = 'key-figures-finland-map-type-en', 
                                                  options = sorted(["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" ,"stamen-watercolor"]),
                                                  value = "stamen-terrain",
-                                                 className = 'text-dark bg-light text-nowrap')
+                                                 className = 'text-nowrap')
                                     ]),
                                 dbc.Col([
                                     html.H3('Change colorscale', className = 'mt-2'),
                                     dcc.Dropdown(id = 'key-figures-finland-map-colorscale-en', 
                                                  options = sorted(['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']),
                                                  value = "RdBu",
-                                                 className = 'text-dark bg-light text-nowrap')
+                                                 className = 'text-nowrap')
                                     ]),
                                 
                                 ])
