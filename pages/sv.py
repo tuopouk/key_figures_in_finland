@@ -169,10 +169,10 @@ layout = dbc.Container([
                     
                             html.H1(id = 'key-figures-finland-header-sv', className="mb-3 mt-3 display-3 card-title text-center"),
                             dcc.Graph(id = 'key-figures-finland-region-map-sv',
-                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
+                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}, zoom = 3.8, height = 600, mapbox_style = 'stamen-terrain'), 
                               clear_on_unhover=True,
-                              config = {'locale':'sv',
-                                        'mapboxAccessToken':token
+                              config = {'mapboxAccessToken':token,
+                                        'locale':'sv'
                                         },
                               className = 'border'),
                     
