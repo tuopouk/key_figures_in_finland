@@ -98,8 +98,7 @@ layout = dbc.Container([
                                     html.H2('Key figure'),
                                     dcc.Dropdown(id = 'key-figures-finland-key-figure-selection-en',
                                                  options = whole_country_df.index,
-                                                 value = whole_country_df.index[0],
-                                                 className = 'text-dark bg-light text-nowrap'
+                                                 value = whole_country_df.index[0]
                                                  )
                                     ]),
                                 dbc.Col([
@@ -163,7 +162,7 @@ layout = dbc.Container([
                         
                         ], style = {'height':'100%'}),
                     
-                    ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6, align = 'start'),
+                    ], xs = 12, sm = 12, md = 6, lg = 6, xl = 6, xxl = 6, align = 'start'),
                 dbc.Col([
                     
                     dbc.Card([
@@ -172,9 +171,10 @@ layout = dbc.Container([
                     
                             html.H1(id = 'key-figures-finland-header-en', className="mb-3 mt-3 display-3 card-title text-center"),
                             dcc.Graph(id = 'key-figures-finland-region-map-en',
-                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 27.590605}), 
+                              figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
                               clear_on_unhover=True,
-                              config = {'locale':'en'
+                              config = {'mapboxAccessToken':'pk.eyJ1IjoiZ3VkdW1hbyIsImEiOiJjanNrZzA5aWoyazU3NDN0Yjl6Y25zend6In0.zkMKSjHPzqG5mQCX-yWdMw',
+                                        'locale':'en'
                                         },
                               className = 'border'),
                     
@@ -200,7 +200,7 @@ layout = dbc.Container([
                        
                         ], style = {'height':'100%'})
                     
-                    ], xs = 12, sm = 12, md = 12, lg = 6, xl = 6, xxl = 6)
+                    ], xs = 12, sm = 12, md = 6, lg = 6, xl = 6, xxl = 6)
     
                 ], justify = 'center', className = "mt-3 d-flex justify-content-center"),
             
@@ -211,7 +211,7 @@ layout = dbc.Container([
         
 
 
-        ], fluid = True,className = 'dbc')    
+        ], fluid = True)    
 
 @callback(
 
@@ -452,8 +452,8 @@ clientside_callback(
     function(geojson, locations, z, map_type, colorscale){           
        
         var layout = {
-            'height':660,
-            'mapbox': {'style':map_type,'zoom':4.0,'center':{'lat': 64.961093, 'lon': 27.590605}
+            'height':600,
+            'mapbox': {'style':map_type,'zoom':3.8,'center':{'lat': 64.961093, 'lon': 25.795386}
             },
             'margin':{'l':0,'t':0,'b':0,'r':0}
         };
