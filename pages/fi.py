@@ -4,21 +4,12 @@ from dash_extensions.enrich import dcc, html, Input, Output, State, ServersideOu
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import template_from_url, ThemeChangerAIO
 import plotly.express as px
-# import locale
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
 import os
 
-try:
-  token = os.environ.get('.token')
-except:
-  token = ''
-
-# try:
-#     locale.setlocale(locale.LC_ALL, 'fi_FI')
-# except:
-#     locale.setlocale(locale.LC_ALL, 'fi-FI')
+token = open(".mapbox_token").read()
 
 register_page(__name__,
               title = 'Suomen alueelliset avainluvut',
