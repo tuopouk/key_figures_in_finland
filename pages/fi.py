@@ -173,8 +173,7 @@ layout = dbc.Container([
                             dcc.Graph(id = 'key-figures-finland-region-map-fi',
                               figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
                               clear_on_unhover=True,
-                              config = {'mapboxAccessToken':'pk.eyJ1IjoiZ3VkdW1hbyIsImEiOiJjanNrZzA5aWoyazU3NDN0Yjl6Y25zend6In0.zkMKSjHPzqG5mQCX-yWdMw',
-                                        'locale':'fi'
+                              config = {'locale':'fi'
                                         },
                               className = 'border'),
                     
