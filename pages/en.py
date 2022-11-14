@@ -14,6 +14,10 @@ from dash.exceptions import PreventUpdate
 # except:
 #     locale.setlocale(locale.LC_ALL, 'en-US')
 
+try:
+  token = os.environ.get('.token')
+except:
+  token = ''
 
 register_page(__name__, 
               path='/',
@@ -174,7 +178,8 @@ layout = dbc.Container([
                             dcc.Graph(id = 'key-figures-finland-region-map-en',
                               figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
                               clear_on_unhover=True,
-                              config = {'locale':'en'
+                              config = {'locale':'en',
+                                        'mapboxAccessToken':token
                                         },
                               className = 'border'),
                     
