@@ -361,10 +361,10 @@ def update_timeseries_chart(key_figure,
     dff[region] = dff[region].astype(str)
     
     if chart_type == 'linjediagram':    
-        fig = px.line(dff, x = 'År', y = name, color = region, template = template, hover_data = [region,'År',name], title = f'{kf} per år i <b>{loc_string}<b>')
+        fig = px.line(dff, x = 'År', y = name, color = region, template = template, hover_data = [region,'År',name], title = f'{kf} per år i<b>{loc_string}<b>')
         fig.update_traces(line=dict(width=4))
     else:
-        fig = px.area(dff, x = 'År', y = name, color = region, template = template, hover_data = [region,'År',name], title = f'{kf} per år i <b>{loc_string}<b>')
+        fig = px.area(dff, x = 'År', y = name, color = region, template = template, hover_data = [region,'År',name], title = f'{kf} per år i<b>{loc_string}<b>')
     fig.update_layout(margin = dict(l=0,r=0),
                       hoverlabel=dict(font_size=23)
     )
