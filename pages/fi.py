@@ -8,6 +8,12 @@ import plotly.express as px
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
+import os
+
+try:
+  token = os.environ.get('.token')
+except:
+  token = ''
 
 # try:
 #     locale.setlocale(locale.LC_ALL, 'fi_FI')
@@ -174,7 +180,8 @@ layout = dbc.Container([
                             dcc.Graph(id = 'key-figures-finland-region-map-fi',
                               figure = px.choropleth_mapbox(center = {"lat": 64.961093, "lon": 25.795386}), 
                               clear_on_unhover=True,
-                              config = {'locale':'fi'
+                              config = {'locale':'fi',
+                                        'mapboxAccessToken':token
                                         },
                               className = 'border'),
                     
