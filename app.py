@@ -396,6 +396,24 @@ def update_email_topic(label):
     else:
        return [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",external_link=True, target='_blank')] 
 
+@dash.callback(
+
+      Output(ThemeChangerAIO.ids.button("key-figures-finland-key-theme-selection-x"), "title"),
+      Output(ThemeChangerAIO.ids.button("key-figures-finland-key-theme-selection-x"), "children"),
+      Output(ThemeChangerAIO.ids.offcanvas("key-figures-finland-key-theme-selection-x"), "title"),
+      Input('key-figures-finland-location-x','pathname')
+    
+)
+def change_theme_changer_language(pathname):
+    
+    if pathname == '/':
+        return 'Vaihda väriteemaa', 'Vaihda väriteemaa', "Valitse jokin alla olevista väriteemoista"
+    elif pathname == '/en':
+        return 'Change Color Theme', 'Change Color Theme', "Select a Color Theme"
+    elif pathname == '/sv':
+        return "Ändra färgtema", "Ändra färgtema", "Välj ett färgtema"
+    else:
+        return 'Vaihda väriteemaa', 'Vaihda väriteemaa', "Valitse jokin alla olevista väriteemoista"
 
 server = app.server
 if __name__ == '__main__':
