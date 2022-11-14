@@ -4,15 +4,15 @@ from dash_extensions.enrich import dcc, html, Input, Output, State, ServersideOu
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import template_from_url, ThemeChangerAIO
 import plotly.express as px
-import locale
+# import locale
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
 
-try:
-    locale.setlocale(locale.LC_ALL, 'fi_FI')
-except:
-    locale.setlocale(locale.LC_ALL, 'fi-FI')
+# try:
+#     locale.setlocale(locale.LC_ALL, 'fi_FI')
+# except:
+#     locale.setlocale(locale.LC_ALL, 'fi-FI')
 
 register_page(__name__,
               title = 'Suomen alueelliset avainluvut',
