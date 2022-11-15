@@ -387,9 +387,9 @@ def update_label(*args):
 def update_email_topic(label):
         
 
-    if label == '/':
+    if label == '/fi':
         return [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Suomen alueelliset avainluvut",external_link=True, target='_blank')]
-    elif label == '/en':
+    elif label == '/':
         return [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",external_link=True, target='_blank')]
     elif label == '/sv':
         return [dbc.NavLink(html.I(className="bi bi-envelope"), href="mailto:tuomas.poukkula@gofore.com?subject=Finlands regionala nyckeltal",external_link=True, target='_blank')]
