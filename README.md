@@ -8,5 +8,5 @@ https://keyfiguresfinland.onrender.com/
 
 
 
-Uploading 2022-11-15 12-53-14_keyfiguresfinland.mp4…
+https://user-images.githubusercontent.com/66461922/202154150-97e3a26d-4e8b-4b6c-adc1-23229ef0a95f.mp4
 
