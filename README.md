@@ -4,8 +4,9 @@ I built this Dash app which visualizes the Municipal Key Figures data by Statist
 The key figures dataset includes some basic demographic indicators on a selected area. In Finland there are three main region categories: the regional, the sub-regional and the municipal level. Here one can select a region level and a key figure. The map visualization shows the latest value of the figure of each regional unit. One can hover on the map and the left-side timeseries visualization will change to show the timeseries data of the selected area in terms of the indicator. The user can also change the visualization styles from the dropdowns. The data is retrieved via the Statistics Finland API. The app is multilingual with pages in English, Finnish and Swedish.
 
 
-App live on:
+Check the app live on:
 https://keyfiguresfinland.herokuapp.com/
+or 
 https://keyfiguresfinland.onrender.com/
 
 
