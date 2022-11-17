@@ -349,7 +349,7 @@ layout = dbc.Container(
                                                 html.P(
                                                     id="key-figures-finland-definition-sv",
                                                     children=definitions.loc[
-                                                        whole_country_df.index[0]
+                                                        whole_country_df.index[0].split(',')[0]
                                                     ].definition,
                                                     className="card-text mt-3 mb-2",
                                                 )
@@ -386,7 +386,7 @@ layout = dbc.Container(
 )
 def update_definition(key_figure):
     try:
-        return definitions.loc[key_figure].definition
+        return definitions.loc[key_figure.split(',')[0]].definition
     except:
         return ""
 
