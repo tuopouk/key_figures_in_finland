@@ -45,6 +45,8 @@ default_map = px.choropleth_mapbox(
 )
 default_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
+definitions = pd.read_csv("./assets/definitions_sv.csv").set_index("key_figure")
+
 
 def get_data(region_level):
 
@@ -342,6 +344,17 @@ layout = dbc.Container(
                                                 ),
                                             ]
                                         ),
+                                        dbc.Row(
+                                            [
+                                                html.P(
+                                                    id="key-figures-finland-definition-sv",
+                                                    children=definitions.loc[
+                                                        whole_country_df.index[0]
+                                                    ].definition,
+                                                    className="card-text mt-3 mb-2",
+                                                )
+                                            ]
+                                        ),
                                     ]
                                 ),
                             ],
@@ -365,6 +378,17 @@ layout = dbc.Container(
     ],
     fluid=True,
 )
+
+
+@callback(
+    Output("key-figures-finland-definition-sv", "children"),
+    Input("key-figures-finland-key-figure-selection-sv", "value"),
+)
+def update_definition(key_figure):
+    try:
+        return definitions.loc[key_figure].definition
+    except:
+        return ""
 
 
 @callback(

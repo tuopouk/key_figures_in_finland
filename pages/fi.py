@@ -44,6 +44,8 @@ default_map = px.choropleth_mapbox(
 )
 default_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
+definitions = pd.read_csv("./assets/definitions_fi.csv").set_index("key_figure")
+
 
 def get_data(region_level):
 
@@ -108,6 +110,8 @@ whole_country_df["stat_name"] = [
 ]
 data_df = data_df[data_df.nimi != "KOKO MAA"]
 
+region_list_initial = sorted(list(data_df.loc["Maakunta"]["nimi"].unique()))
+
 layout = dbc.Container(
     [
         html.H1(
@@ -157,7 +161,6 @@ layout = dbc.Container(
                                             id="key-figures-finland-whole-country-header-fi",
                                             className="text-center card-title mt-5 mb-3",
                                         ),
-                                        # dcc.Loading(id = 'key-figures-finland-timeseries-div-fi'),
                                         dcc.Graph(
                                             id="key-figures-finland-timeseries-fi",
                                             figure=default_fig,
@@ -340,6 +343,17 @@ layout = dbc.Container(
                                                 ),
                                             ]
                                         ),
+                                        dbc.Row(
+                                            [
+                                                html.P(
+                                                    id="key-figures-finland-definition-fi",
+                                                    children=definitions.loc[
+                                                        whole_country_df.index[0]
+                                                    ].definition,
+                                                    className="card-text mt-3 mb-2",
+                                                )
+                                            ]
+                                        ),
                                     ]
                                 ),
                             ],
@@ -363,6 +377,17 @@ layout = dbc.Container(
     ],
     fluid=True,
 )
+
+
+@callback(
+    Output("key-figures-finland-definition-fi", "children"),
+    Input("key-figures-finland-key-figure-selection-fi", "value"),
+)
+def update_definition(key_figure):
+    try:
+        return definitions.loc[key_figure].definition
+    except:
+        return ""
 
 
 @callback(
@@ -424,7 +449,6 @@ def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
 
 @callback(
     Output("key-figures-finland-timeseries-fi", "figure"),
-    # Output('key-figures-finland-timeseries-div-fi','children'),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
     Input("key-figures-finland-region-map-fi", "hoverData"),
     Input("key-figures-finland-region-map-fi", "clickData"),
@@ -527,7 +551,6 @@ def update_timeseries_chart(
     fig.update_layout(margin=dict(l=0, r=0), hoverlabel=dict(font_size=23))
 
     return fig
-    # return dcc.Graph(id = 'key-figures-finland-timeseries-fi', figure = fig, config = config, className = 'border')
 
 
 @callback(
