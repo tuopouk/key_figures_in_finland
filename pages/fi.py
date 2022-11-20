@@ -391,7 +391,10 @@ layout = dbc.Container(
 def update_playback(key_word):
     kw = re.sub(r"\W+", "", key_word.split(",")[0])
     return html.Audio(
-        src=f"./assets/recordings/fi/{kw}.mp3", controls=True, autoPlay=False
+        src=f"./assets/recordings/fi/{kw}.mp3",
+        controls=True,
+        autoPlay=False,
+        title="Lue ääneen",
     )
 
 
