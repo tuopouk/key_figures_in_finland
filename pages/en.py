@@ -17,7 +17,7 @@ import plotly.express as px
 import orjson
 import requests
 from dash.exceptions import PreventUpdate
-
+import re
 
 register_page(
     __name__,
@@ -343,10 +343,15 @@ layout = dbc.Container(
                                                 html.P(
                                                     id="key-figures-finland-definition-en",
                                                     children=definitions.loc[
-                                                        whole_country_df.index[0].split(',')[0]
+                                                        whole_country_df.index[0].split(
+                                                            ","
+                                                        )[0]
                                                     ].definition,
                                                     className="card-text mt-3 mb-2",
-                                                )
+                                                ),
+                                                html.Div(
+                                                    id="key-figures-finland-audio-en"
+                                                ),
                                             ]
                                         ),
                                     ]
@@ -375,12 +380,23 @@ layout = dbc.Container(
 
 
 @callback(
+    Output("key-figures-finland-audio-en", "children"),
+    Input("key-figures-finland-key-figure-selection-en", "value"),
+)
+def update_playback(key_word):
+    kw = re.sub(r"\W+", "", key_word.split(",")[0])
+    return html.Audio(
+        src=f"./assets/recordings/en/{kw}.mp3", controls=True, autoPlay=False
+    )
+
+
+@callback(
     Output("key-figures-finland-definition-en", "children"),
     Input("key-figures-finland-key-figure-selection-en", "value"),
 )
 def update_definition(key_figure):
     try:
-        return definitions.loc[key_figure.split(',')[0]].definition
+        return definitions.loc[key_figure.split(",")[0]].definition
     except:
         return ""
 
