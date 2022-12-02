@@ -283,20 +283,7 @@ navbar = dbc.Navbar(
         [
             dbc.Row(
                 [
-                    dbc.Col(
-                        [
-                            html.A(
-                                [
-                                    html.Img(
-                                        src="assets/gofore_logo_white.svg",
-                                        height="60px",
-                                    )
-                                ],
-                                href="https://gofore.com/",
-                                target="_blank",
-                            )
-                        ]
-                    ),  # xl = 4, lg = 4, md = 12, sm = 12),
+                    
                     dbc.Col(
                         [
                             dbc.NavItem(change_theme),
@@ -342,17 +329,7 @@ navbar = dbc.Navbar(
                                                 target="_blank",
                                             )
                                         ),
-                                        dbc.NavItem(
-                                            id="key-figures-finland-email-x",
-                                            children=[
-                                                dbc.NavLink(
-                                                    html.I(className="bi bi-envelope"),
-                                                    href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",
-                                                    external_link=True,
-                                                    target="_blank",
-                                                )
-                                            ],
-                                        ),
+                                 
                                     ]
                                 ),
                                 id="key-figures-finland-navbar-collapse-x",
@@ -545,49 +522,6 @@ def update_label(*args):
     else:
         return "SV"
 
-
-@callback(
-    Output("key-figures-finland-email-x", "children"),
-    Input("key-figures-finland-location-x", "pathname"),
-)
-def update_email_topic(label):
-
-    if label == "/fi":
-        return [
-            dbc.NavLink(
-                html.I(className="bi bi-envelope"),
-                href="mailto:tuomas.poukkula@gofore.com?subject=Suomen alueelliset avainluvut",
-                external_link=True,
-                target="_blank",
-            )
-        ]
-    elif label == "/":
-        return [
-            dbc.NavLink(
-                html.I(className="bi bi-envelope"),
-                href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",
-                external_link=True,
-                target="_blank",
-            )
-        ]
-    elif label == "/sv":
-        return [
-            dbc.NavLink(
-                html.I(className="bi bi-envelope"),
-                href="mailto:tuomas.poukkula@gofore.com?subject=Finlands regionala nyckeltal",
-                external_link=True,
-                target="_blank",
-            )
-        ]
-    else:
-        return [
-            dbc.NavLink(
-                html.I(className="bi bi-envelope"),
-                href="mailto:tuomas.poukkula@gofore.com?subject=Key Figures Finland",
-                external_link=True,
-                target="_blank",
-            )
-        ]
 
 
 @callback(
