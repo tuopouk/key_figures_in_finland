@@ -53,7 +53,7 @@ def get_data(region_level):
     name = "namn"
 
     # Query url
-    url = "https://pxdata.stat.fi:443/PxWeb/api/v1/sv/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
+    url = "https://pxdata.stat.fi:443/PxWeb/api/v1/sv/Kuntien_avainluvut/uusin/kuntien_avainluvut_viimeisin.px"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
@@ -65,7 +65,11 @@ def get_data(region_level):
 
     json = requests.post(url, json=payload, headers=headers).json()
 
-    cities = list(json["dimension"]["Alue 2021"]["category"]["label"].values())
+    cities = list(json["dimension"]["Alue"]["category"]["label"].values())
+    
+    if region_level != 'Municipality':
+        cities = [cities[0]]+[' '.join(c.split()[1:]).strip() for c in cities[1:]]
+  
 
     dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].values())
 
@@ -87,16 +91,21 @@ def get_data(region_level):
         "Sub-region": "Ekonomisk region",
         "Municipality": "Kommun",
     }[region_level]
-    data = data.set_index("region_level")
-    data.index = data.index.astype("category")
+    #data = data.set_index("region_level")
+    #data.index = data.index.astype("category")
     data[name] = data[name].astype("category")
+
+    
 
     return data
 
 
 data_df = pd.concat(
-    [get_data("Region"), get_data("Sub-region"), get_data("Municipality")]
-).drop_duplicates()
+    [get_data("Region"), 
+     get_data("Sub-region").query("namn!='HELA LANDET'"), 
+     get_data("Municipality").query("namn!='HELA LANDET'")]
+).set_index('region_level')
+
 whole_country_df = pd.DataFrame(
     data_df.set_index("namn").loc["HELA LANDET"].sort_index()
 )

@@ -54,7 +54,7 @@ def get_data(region_level):
     name = "name"
 
     # Query url
-    url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
+    url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/uusin/kuntien_avainluvut_viimeisin.px"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
@@ -66,7 +66,10 @@ def get_data(region_level):
 
     json = requests.post(url, json=payload, headers=headers).json()
 
-    cities = list(json["dimension"]["Alue 2021"]["category"]["label"].values())
+    cities = list(json["dimension"]["Alue"]["category"]["label"].values())
+    if region_level != 'Municipality':
+        cities = [cities[0]]+[' '.join(c.split()[1:]).strip() for c in cities[1:]]
+   
 
     dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].values())
 
@@ -86,17 +89,23 @@ def get_data(region_level):
     data["region_level"] = region_level
     data = data.set_index("region_level")
     data.index = data.index.astype("category")
+    
     data[name] = data[name].astype("category")
-
+    
     return data
 
 
 data_df = pd.concat(
-    [get_data("Region"), get_data("Sub-region"), get_data("Municipality")]
-).drop_duplicates()
+    [get_data("Region"), 
+     get_data("Sub-region").query("name!='WHOLE COUNTRY'"), 
+     get_data("Municipality").query("name!='WHOLE COUNTRY'")]
+)
+
+
 whole_country_df = pd.DataFrame(
     data_df.set_index("name").loc["WHOLE COUNTRY"].sort_index()
 )
+
 whole_country_df["year"] = [stat.split(", ")[-1] for stat in whole_country_df.index]
 whole_country_df["unit"] = [
     stat.split(", ")[-2] if len(stat.split(", ")) > 2 else ""
@@ -503,10 +512,12 @@ def update_timeseries_chart(
         if subregion_df is None:
             raise PreventUpdate
         dff = subregion_df
+        #dff.index = [c if c == 'WHOLE COUNTRY' else ' '.join(c.split()[1:]).strip() for c in dff.index]
     else:
         if region_df is None:
             raise PreventUpdate
         dff = region_df
+        #dff.index = [c if c == 'WHOLE COUNTRY' else ' '.join(c.split()[1:]).strip() for c in dff.index]
 
     if sel_data is not None:
 
@@ -524,6 +535,7 @@ def update_timeseries_chart(
 
         location = ["WHOLE COUNTRY"]
 
+   
     try:
         dff = dff.loc[location].query(f"dimensions=='{kf}'")
 
@@ -669,7 +681,7 @@ def reset_map_selections(kf, reg):
     Input("key-figures-finland-region-selection-en", "value"),
 )
 def store_data(key_figure, region):
-
+   
     dff = data_df.loc[region][["name", key_figure]]
     return list(dff["name"].values), list(dff[key_figure].values)
 
