@@ -26,15 +26,16 @@ import pandas as pd
 import numpy as np
 
 
-# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2021&outputFormat=json
+# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2023&outputFormat=json
 with open("assets/municipalities_multilang.json", encoding="utf-8") as f:
     municipalities_json = orjson.loads(f.read())
 
-# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2021&outputFormat=json
+# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2023&outputFormat=json
 with open("assets/regions_multilang.json", encoding="utf-8") as f:
     regions_json = orjson.loads(f.read())
 
-# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2021&outputFormat=json
+
+# https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2023&outputFormat=json
 with open("assets/subregions_multilang.json", encoding="utf-8") as f:
     subregions_json = orjson.loads(f.read())
 
@@ -52,7 +53,7 @@ def get_region_names():
     }
     df = None
     for lang in ["fi", "sv", "en"]:
-        url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_viimeisin.px"
+        url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/uusin/kuntien_avainluvut_viimeisin.px"
         json = requests.get(url, headers=headers).json()
         dff = pd.DataFrame(
             [
@@ -69,6 +70,10 @@ def get_region_names():
     df = df.astype(
         {"id": "category", "nimi": "category", "namn": "category", "name": "category"}
     )
+    df.nimi = [c if c == 'KOKO MAA' or (c[:2]!='SK' and c[:2]!='MK') else ' '.join(c.split()[1:]).strip() for c in df.nimi]
+    df.name = [c if c == 'WHOLE COUNTRY' or (c[:2]!='SK' and c[:2]!='MK')  else ' '.join(c.split()[1:]).strip() for c in df.name]
+    df.namn = [c if c == 'HELA LANDET' or (c[:2]!='SK' and c[:2]!='MK') else ' '.join(c.split()[1:]).strip() for c in df.namn]
+    
     return df.set_index("id")
 
 
@@ -79,7 +84,7 @@ def get_series_indicator_names():
     }
     df = None
     for lang in ["fi", "sv", "en"]:
-        url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_aikasarja.px"
+        url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/uusin/kuntien_avainluvut_aikasarja.px"
         json = requests.get(url, headers=headers).json()
         dff = pd.DataFrame(
             [
@@ -99,7 +104,7 @@ def get_series_indicator_names():
     return df.set_index("id")
 
 
-def get_timeseries_data(region_level, split=3):
+def get_timeseries_data(region_level, split=5):
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
@@ -109,7 +114,7 @@ def get_timeseries_data(region_level, split=3):
     with open(f"./assets/{region_level}_series_payload.json") as f:
         payload = orjson.loads(f.read())
 
-    series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/2021/kuntien_avainluvut_2021_aikasarja.px"
+    series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/uusin/kuntien_avainluvut_aikasarja.px"
 
     if region_level == "Municipality":
 
@@ -132,7 +137,7 @@ def get_timeseries_data(region_level, split=3):
             }
 
             json = requests.post(series_url, json=payload, headers=headers).json()
-            cities = list(json["dimension"]["Alue 2021"]["category"]["label"].keys())
+            cities = list(json["dimension"]["Alue"]["category"]["label"].keys())
 
             dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].keys())
             years = list(json["dimension"]["Vuosi"]["category"]["label"].values())
@@ -168,7 +173,7 @@ def get_timeseries_data(region_level, split=3):
 
         json = requests.post(series_url, json=payload, headers=headers).json()
 
-        cities = list(json["dimension"]["Alue 2021"]["category"]["label"].keys())
+        cities = list(json["dimension"]["Alue"]["category"]["label"].keys())
 
         dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].keys())
         years = list(json["dimension"]["Vuosi"]["category"]["label"].values())
@@ -241,7 +246,7 @@ footer = dbc.Card(
                 ),
                 dbc.Col(
                     dbc.NavLink(
-                        DashIconify(icon="logos:twitter"),
+                        DashIconify(icon="logos:twitter-x"),
                         href="https://twitter.com/TuomasPoukkula",
                         external_link=True,
                         target="_blank",
@@ -315,7 +320,7 @@ navbar = dbc.Navbar(
                                         ),
                                         dbc.NavItem(
                                             dbc.NavLink(
-                                                html.I(className="bi bi bi-twitter"),
+                                                html.I(className="bi bi bi-twitter-x"),
                                                 href="https://twitter.com/TuomasPoukkula",
                                                 external_link=True,
                                                 target="_blank",
