@@ -1,6 +1,7 @@
-{"query": [{"code": "Alue 2021",
+{"query": [{"code": "Alue",
    "selection": {"filter": "item",
     "values": [
+        "SSS",
      "SK011",
      "SK014",
      "SK015",
