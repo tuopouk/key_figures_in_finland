@@ -40,7 +40,7 @@ default_map = px.choropleth_mapbox(
     center={"lat": 64.961093, "lon": 25.795386},
     zoom=3.8,
     height=600,
-    mapbox_style="stamen-terrain",
+    mapbox_style="open-street-map",
 )
 default_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
@@ -296,9 +296,6 @@ layout = dbc.Container(
                                                                     "open-street-map",
                                                                     "carto-positron",
                                                                     "carto-darkmatter",
-                                                                    "stamen-terrain",
-                                                                    "stamen-toner",
-                                                                    "stamen-watercolor",
                                                                     "basic",
                                                                     "streets",
                                                                     "outdoors",
@@ -306,9 +303,10 @@ layout = dbc.Container(
                                                                     "dark",
                                                                     "satellite",
                                                                     "satellite-streets",
+                                                                    "white-bg"
                                                                 ]
                                                             ),
-                                                            value="stamen-terrain",
+                                                            value="open-street-map",
                                                             className="text-nowrap",
                                                         ),
                                                     ]
@@ -340,7 +338,8 @@ layout = dbc.Container(
                                                                     "Reds",
                                                                     "Viridis",
                                                                     "YlGnBu",
-                                                                    "YlOrRd",
+                                                                    "YlOrRd"
+                                                                    
                                                                 ]
                                                             ),
                                                             value="RdBu",
