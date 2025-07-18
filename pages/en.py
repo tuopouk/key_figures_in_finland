@@ -6,7 +6,7 @@ from dash_extensions.enrich import (
     Input,
     Output,
     State,
-    ServersideOutput,
+    Serverside,
     register_page,
     callback,
     clientside_callback,
@@ -42,7 +42,7 @@ default_map = px.choropleth_mapbox(
     center={"lat": 64.961093, "lon": 25.795386},
     zoom=3.8,
     height=600,
-    mapbox_style="open-street-map",
+    mapbox_style="open-street-map"
 )
 default_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
@@ -268,6 +268,7 @@ layout = dbc.Container(
                                             id="key-figures-finland-header-en",
                                             className="mb-3 mt-3 display-3 card-title text-center",
                                         ),
+                                        dcc.Loading(
                                         dcc.Graph(
                                             id="key-figures-finland-region-map-en",
                                             figure=default_map,
@@ -277,7 +278,7 @@ layout = dbc.Container(
                                                 "locale": "en",
                                             },
                                             className="border",
-                                        ),
+                                        )),
                                         dbc.Row(
                                             [
                                                 dbc.Col(
@@ -413,7 +414,7 @@ def update_definition(key_figure):
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-region-en", "data"),
+    Output("key-figures-finland-series-data-region-en", "data"),
     Input("key-figures-finland-series-data-region-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -424,15 +425,15 @@ def create_reg_timeseries_data(region_df, reg_names, series_indicator_names):
 
     def apply_indicator_name(index):
         return series_indicator_names.loc[index]["name"]
-
+    
     region_df.index = region_df.index.map(apply_index_name)
     region_df.dimensions = region_df.dimensions.map(apply_indicator_name)
-
-    return region_df
+    
+    return Serverside(region_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-subregion-en", "data"),
+    Output("key-figures-finland-series-data-subregion-en", "data"),
     Input("key-figures-finland-series-data-subregion-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -446,12 +447,12 @@ def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_name
 
     subregion_df.index = subregion_df.index.map(apply_index_name)
     subregion_df.dimensions = subregion_df.dimensions.map(apply_indicator_name)
-
-    return subregion_df
+    
+    return Serverside(subregion_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-municipality-en", "data"),
+    Output("key-figures-finland-series-data-municipality-en", "data"),
     Input("key-figures-finland-series-data-municipality-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -466,7 +467,7 @@ def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
     mun_df.index = mun_df.index.map(apply_index_name)
     mun_df.dimensions = mun_df.dimensions.map(apply_indicator_name)
 
-    return mun_df
+    return Serverside(mun_df)
 
 
 @callback(
@@ -658,8 +659,10 @@ def update_whole_country_header(key_figure):
     Output("key-figures-finland-geojson-data-en", "data"),
     Input("key-figures-finland-region-selection-en", "value"),
     State("key-figures-finland-geojson-collection-x", "data"),
+    prevent_initial_call=True
 )
 def store_geojson(region, geojson_collection):
+    
     return geojson_collection[region]
 
 
@@ -667,7 +670,7 @@ def store_geojson(region, geojson_collection):
     Output("key-figures-finland-region-map-en", "selectedData"),
     Output("key-figures-finland-region-map-en", "clickData"),
     Input("key-figures-finland-region-selection-en", "value"),
-    Input("key-figures-finland-key-figure-selection-en", "value"),
+    Input("key-figures-finland-key-figure-selection-en", "value")
 )
 def reset_map_selections(kf, reg):
     return None, None
@@ -682,13 +685,15 @@ def reset_map_selections(kf, reg):
 def store_data(key_figure, region):
    
     dff = data_df.loc[region][["name", key_figure]]
-    return list(dff["name"].values), list(dff[key_figure].values)
+
+    return dff["name"].values, dff[key_figure].values
 
 
 clientside_callback(
     """
     function(geojson, locations, z, map_type, colorscale){           
        
+        console.log("Updating map with data:", geojson, locations, z);
         var layout = {
             'height':600,
             'mapbox': {'style':map_type,'zoom':3.8,'center':{'lat': 64.961093, 'lon': 25.795386}
@@ -716,5 +721,5 @@ clientside_callback(
     Input("key-figures-finland-locations-en", "data"),
     Input("key-figures-finland-zs-en", "data"),
     Input("key-figures-finland-map-type-en", "value"),
-    Input("key-figures-finland-map-colorscale-en", "value"),
+    Input("key-figures-finland-map-colorscale-en", "value")
 )

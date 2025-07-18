@@ -6,7 +6,7 @@ from dash_extensions.enrich import (
     Input,
     Output,
     State,
-    ServersideOutput,
+    Serverside,
     register_page,
     callback,
     clientside_callback,
@@ -18,6 +18,12 @@ import orjson
 import requests
 from dash.exceptions import PreventUpdate
 import re
+import os
+# import stadiamaps
+# from stadiamaps.rest import ApiException
+
+
+
 
 register_page(
     __name__,
@@ -36,6 +42,9 @@ default_fig.update_xaxes(showgrid=False, visible=False)
 default_fig.update_yaxes(showgrid=False, visible=False)
 
 token = open(".mapbox_token").read()
+# stadia_token = open(".stadia_token").read()
+
+
 default_map = px.choropleth_mapbox(
     center={"lat": 64.961093, "lon": 25.795386},
     zoom=3.8,
@@ -46,6 +55,16 @@ default_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
 definitions = pd.read_csv("./assets/definitions_fi.csv").set_index("key_figure")
 
+
+# Defining the host is optional and defaults to https://api.stadiamaps.com
+# You can also use our EU endpoint to keep traffic within the EU like so:
+# configuration = stadiamaps.Configuration(host="https://api-eu.stadiamaps.com")
+# See configuration.py for a list of all supported configuration parameters.
+# configuration = stadiamaps.Configuration()
+
+# Configure API key authorization. This example assumes it is injected via an environment
+# variable.
+# configuration.api_key['ApiKeyAuth'] = stadia_token
 
 def get_data(region_level):
 
@@ -271,16 +290,16 @@ layout = dbc.Container(
                                             id="key-figures-finland-header-fi",
                                             className="mb-3 mt-3 display-3 card-title text-center",
                                         ),
-                                        dcc.Graph(
+                                        dcc.Loading(dcc.Graph(
                                             id="key-figures-finland-region-map-fi",
                                             figure=default_map,
                                             clear_on_unhover=True,
                                             config={
-                                                "mapboxAccessToken": token,
+                                                "mapboxAccessToken":token,
                                                 "locale": "fi",
                                             },
                                             className="border",
-                                        ),
+                                        )),
                                         dbc.Row(
                                             [
                                                 dbc.Col(
@@ -296,6 +315,9 @@ layout = dbc.Container(
                                                                     "open-street-map",
                                                                     "carto-positron",
                                                                     "carto-darkmatter",
+                                                                    "stamen-terrain",
+                                                                    "stamen-toner",
+                                                                    "stamen-watercolor",
                                                                     "basic",
                                                                     "streets",
                                                                     "outdoors",
@@ -393,6 +415,7 @@ layout = dbc.Container(
 @callback(
     Output("key-figures-finland-audio-fi", "children"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def update_playback(key_word):
     kw = re.sub(r"\W+", "", key_word.split(",")[0])
@@ -407,6 +430,7 @@ def update_playback(key_word):
 @callback(
     Output("key-figures-finland-definition-fi", "children"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def update_definition(key_figure):
     try:
@@ -416,10 +440,11 @@ def update_definition(key_figure):
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-region-fi", "data"),
+    Output("key-figures-finland-series-data-region-fi", "data"),
     Input("key-figures-finland-series-data-region-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
+    prevent_initial_call=True
 )
 def create_region_timeseries_data(region_df, reg_names, series_indicator_names):
     def apply_index_name(index):
@@ -431,14 +456,15 @@ def create_region_timeseries_data(region_df, reg_names, series_indicator_names):
     region_df.index = region_df.index.map(apply_index_name)
     region_df.dimensions = region_df.dimensions.map(apply_indicator_name)
 
-    return region_df
+    return Serverside(region_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-subregion-fi", "data"),
+    Output("key-figures-finland-series-data-subregion-fi", "data"),
     Input("key-figures-finland-series-data-subregion-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
+    prevent_initial_call=True
 )
 def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_names):
     def apply_index_name(index):
@@ -450,14 +476,15 @@ def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_name
     subregion_df.index = subregion_df.index.map(apply_index_name)
     subregion_df.dimensions = subregion_df.dimensions.map(apply_indicator_name)
 
-    return subregion_df
+    return Serverside(subregion_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-municipality-fi", "data"),
+    Output("key-figures-finland-series-data-municipality-fi", "data"),
     Input("key-figures-finland-series-data-municipality-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
+    prevent_initial_call=True
 )
 def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
     def apply_index_name(index):
@@ -469,7 +496,7 @@ def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
     mun_df.index = mun_df.index.map(apply_index_name)
     mun_df.dimensions = mun_df.dimensions.map(apply_indicator_name)
 
-    return mun_df
+    return Serverside(mun_df)
 
 
 @callback(
@@ -487,6 +514,7 @@ def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
     Input("key-figures-finland-series-data-region-fi", "data"),
     State("key-figures-finland-series-data-subregion-fi", "data"),
     State("key-figures-finland-series-data-municipality-fi", "data"),
+    prevent_initial_call=True
 )
 def update_timeseries_chart(
     key_figure,
@@ -582,6 +610,7 @@ def update_timeseries_chart(
     Output("key-figures-finland-header-fi", "children"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
     Input("key-figures-finland-region-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def update_header(key_figure, region_level):
     return f"{key_figure} {region_level}tasolla".capitalize()
@@ -590,6 +619,7 @@ def update_header(key_figure, region_level):
 @callback(
     Output("key-figures-finland-whole-country-header-fi", "children"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def update_whole_country_header(key_figure):
     # Get all the header components.
@@ -653,7 +683,7 @@ def update_whole_country_header(key_figure):
 @callback(
     Output("key-figures-finland-geojson-data-fi", "data"),
     Input("key-figures-finland-region-selection-fi", "value"),
-    State("key-figures-finland-geojson-collection-x", "data"),
+    State("key-figures-finland-geojson-collection-x", "data")
 )
 def store_geojson(region, geojson_collection):
     return geojson_collection[
@@ -668,6 +698,7 @@ def store_geojson(region, geojson_collection):
     Output("key-figures-finland-region-map-fi", "clickData"),
     Input("key-figures-finland-region-selection-fi", "value"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def reset_map_selections(kf, reg):
     return None, None
@@ -678,6 +709,7 @@ def reset_map_selections(kf, reg):
     Output("key-figures-finland-zs-fi", "data"),
     Input("key-figures-finland-key-figure-selection-fi", "value"),
     Input("key-figures-finland-region-selection-fi", "value"),
+    prevent_initial_call=True
 )
 def store_data(key_figure, region):
 

@@ -6,7 +6,7 @@ from dash_extensions.enrich import (
     Input,
     Output,
     State,
-    ServersideOutput,
+    Serverside,
     register_page,
     callback,
     clientside_callback,
@@ -275,6 +275,7 @@ layout = dbc.Container(
                                             id="key-figures-finland-header-sv",
                                             className="mb-3 mt-3 display-3 card-title text-center",
                                         ),
+                                        dcc.Loading(
                                         dcc.Graph(
                                             id="key-figures-finland-region-map-sv",
                                             figure=default_map,
@@ -284,7 +285,7 @@ layout = dbc.Container(
                                                 "locale": "sv",
                                             },
                                             className="border",
-                                        ),
+                                        )),
                                         dbc.Row(
                                             [
                                                 dbc.Col(
@@ -419,7 +420,7 @@ def update_definition(key_figure):
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-region-sv", "data"),
+    Output("key-figures-finland-series-data-region-sv", "data"),
     Input("key-figures-finland-series-data-region-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -431,14 +432,15 @@ def create_reg_timeseries_data(region_df, reg_names, series_indicator_names):
     def apply_indicator_name(index):
         return series_indicator_names.loc[index]["namn"]
 
+    
     region_df.index = region_df.index.map(apply_index_name)
     region_df.dimensions = region_df.dimensions.map(apply_indicator_name)
 
-    return region_df
+    return Serverside(region_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-subregion-sv", "data"),
+    Output("key-figures-finland-series-data-subregion-sv", "data"),
     Input("key-figures-finland-series-data-subregion-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -453,11 +455,11 @@ def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_name
     subregion_df.index = subregion_df.index.map(apply_index_name)
     subregion_df.dimensions = subregion_df.dimensions.map(apply_indicator_name)
 
-    return subregion_df
+    return Serverside(subregion_df)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-municipality-sv", "data"),
+    Output("key-figures-finland-series-data-municipality-sv", "data"),
     Input("key-figures-finland-series-data-municipality-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
@@ -472,7 +474,7 @@ def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
     mun_df.index = mun_df.index.map(apply_index_name)
     mun_df.dimensions = mun_df.dimensions.map(apply_indicator_name)
 
-    return mun_df
+    return Serverside(mun_df)
 
 
 @callback(
