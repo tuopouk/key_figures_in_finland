@@ -9,7 +9,7 @@ from dash_extensions.enrich import (
     DashProxy,
     Input,
     Output,
-    ServersideOutput,
+    Serverside,
     ServersideOutputTransform,
     html,
     dcc,
@@ -24,20 +24,22 @@ import orjson
 import requests
 import pandas as pd
 import numpy as np
+# import geopandas as gpd
+import json
 
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2023&outputFormat=json
 with open("assets/municipalities_multilang.json", encoding="utf-8") as f:
-    municipalities_json = orjson.loads(f.read())
+    municipalities_json = json.loads(f.read())
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=maakunta1000k_2023&outputFormat=json
 with open("assets/regions_multilang.json", encoding="utf-8") as f:
-    regions_json = orjson.loads(f.read())
+    regions_json = json.loads(f.read())
 
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:seutukunta1000k_2023&outputFormat=json
 with open("assets/subregions_multilang.json", encoding="utf-8") as f:
-    subregions_json = orjson.loads(f.read())
+    subregions_json = json.loads(f.read())
 
 geojson_collection = {
     "Municipality": municipalities_json,
@@ -211,16 +213,16 @@ series_indicator_names = get_series_indicator_names()
 reg_names = get_region_names()
 
 
-change_theme = ThemeChangerAIO(
-    aio_id="key-figures-finland-key-theme-selection-x",
-    radio_props={"value": dbc.themes.LUX},
-    button_props={
-        "size": "md",
-        "outline": False,
-        # "style": {"marginTop": ".5rem"},
-        "color": "success",
-    },
-)
+# change_theme = ThemeChangerAIO(
+#     aio_id="key-figures-finland-key-theme-selection-x",
+#     radio_props={"value": dbc.themes.LUX},
+#     button_props={
+#         "size": "md",
+#         "outline": False,
+#         # "style": {"marginTop": ".5rem"},
+#         "color": "success",
+#     },
+# )
 
 # about = dbc.Modal(id = 'key-figures-finland-about-x')
 
@@ -282,6 +284,80 @@ footer = dbc.Card(
     ],
     className="card text-white bg-secondary mt-3 navbar-static-top",
 )
+
+
+
+dbc_css = (
+    "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css"
+)
+# dbc_css = (
+#     "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.1/dbc.min.css"
+# )
+
+external_stylesheets = [
+    dbc.themes.LUX,
+    dbc.icons.BOOTSTRAP,
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
+    dbc_css,
+]
+external_scripts = [
+    "https://cdn.plot.ly/plotly-locale-fi-latest.js",
+    "https://cdn.plot.ly/plotly-locale-sv-latest.js",
+]
+
+app = DashProxy(
+    transforms=[ServersideOutputTransform()],
+    external_stylesheets=external_stylesheets,
+    external_scripts=external_scripts,
+    use_pages=True,
+)
+change_theme = ThemeChangerAIO(
+    aio_id="key-figures-finland-key-theme-selection-x",
+    radio_props={"value": dbc.themes.LUX},
+    button_props={
+        "size": "md",
+        "outline": False,
+        # "style": {"marginTop": ".5rem"},
+        "color": "success",
+    },
+)
+
+# Stuff for PWA.
+app.index_string = """<!DOCTYPE html>
+<html>
+<head>
+<title>Key Figures Finland</title>
+<link rel="manifest" href="./assets/manifest.json" />
+{%metas%}
+{%favicon%}
+{%css%}
+</head>
+<script type="module">
+    import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
+    const el = document.createElement('pwa-update');
+    document.body.appendChild(el);
+</script>
+<body>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', ()=> {
+      navigator
+      .serviceWorker
+      .register('./assets/sw01.js')
+      .then(()=>console.log("Ready."))
+      .catch(()=>console.log("Err..."));
+    });
+  }
+</script>
+{%app_entry%}
+<footer>
+{%config%}
+{%scripts%}
+{%renderer%}
+</footer>
+</body>
+</html>
+"""
 
 navbar = dbc.Navbar(
     dbc.Container(
@@ -376,68 +452,6 @@ navbar = dbc.Navbar(
     className="navbar navbar-default navbar-static-top mb-5",
 )
 
-dbc_css = (
-    "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css"
-)
-
-external_stylesheets = [
-    dbc.themes.LUX,
-    dbc.icons.BOOTSTRAP,
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
-    dbc_css,
-]
-external_scripts = [
-    "https://cdn.plot.ly/plotly-locale-fi-latest.js",
-    "https://cdn.plot.ly/plotly-locale-sv-latest.js",
-]
-
-app = DashProxy(
-    name=__name__,
-    transforms=[ServersideOutputTransform()],
-    external_stylesheets=external_stylesheets,
-    external_scripts=external_scripts,
-    use_pages=True,
-)
-
-
-# Stuff for PWA.
-app.index_string = """<!DOCTYPE html>
-<html>
-<head>
-<title>Key Figures Finland</title>
-<link rel="manifest" href="./assets/manifest.json" />
-{%metas%}
-{%favicon%}
-{%css%}
-</head>
-<script type="module">
-    import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
-    const el = document.createElement('pwa-update');
-    document.body.appendChild(el);
-</script>
-<body>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', ()=> {
-      navigator
-      .serviceWorker
-      .register('./assets/sw01.js')
-      .then(()=>console.log("Ready."))
-      .catch(()=>console.log("Err..."));
-    });
-  }
-</script>
-{%app_entry%}
-<footer>
-{%config%}
-{%scripts%}
-{%renderer%}
-</footer>
-</body>
-</html>
-"""
-
-
 app.layout = dbc.Container(
     [
         dcc.Location(id="key-figures-finland-location-x"),
@@ -457,51 +471,51 @@ app.layout = dbc.Container(
 
 # Do stuff to make the data be stored on the server
 @callback(
-    ServersideOutput("key-figures-finland-geojson-collection-x", "data"),
+    Output("key-figures-finland-geojson-collection-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_geojson_collection(gimmick):
-    return geojson_collection
+    return Serverside(geojson_collection)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-region-names-x", "data"),
+    Output("key-figures-finland-region-names-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_region_names(gimmick):
-    return reg_names
+    return Serverside(reg_names)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-indicator-names-x", "data"),
+    Output("key-figures-finland-series-indicator-names-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_indicator_names(gimmick):
-    return series_indicator_names
+    return Serverside(series_indicator_names)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-region-x", "data"),
+    Output("key-figures-finland-series-data-region-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_region_series(gimmick):
-    return timeseries_region
+    return Serverside(timeseries_region)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-subregion-x", "data"),
+    Output("key-figures-finland-series-data-subregion-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_subregion_series(gimmick):
-    return timeseries_subregion
+    return Serverside(timeseries_subregion)
 
 
 @callback(
-    ServersideOutput("key-figures-finland-series-data-municipality-x", "data"),
+    Output("key-figures-finland-series-data-municipality-x", "data"),
     Input("key-figures-finland-footer-x", "id"),
 )
 def update_mun_series(gimmick):
-    return timeseries_municipality
+    return Serverside(timeseries_municipality)
 
 
 @callback(
@@ -509,10 +523,12 @@ def update_mun_series(gimmick):
     Input("fi", "n_clicks"),
     Input("en", "n_clicks"),
     Input("sv", "n_clicks"),
+    prevent_initial_call=True
 )
 def update_label(*args):
 
     ctx = callback_context
+    
 
     if not ctx.triggered:
         # button_id = "fi"
@@ -561,4 +577,4 @@ def change_theme_changer_language(pathname):
 
 server = app.server
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run(debug=False)
