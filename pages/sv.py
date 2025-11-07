@@ -18,6 +18,7 @@ import orjson
 import requests
 from dash.exceptions import PreventUpdate
 import re
+# from app import geojson_collection
 
 register_page(
     __name__,
@@ -426,17 +427,27 @@ def update_definition(key_figure):
     State("key-figures-finland-series-indicator-names-x", "data"),
 )
 def create_reg_timeseries_data(region_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["namn"]
+    # Defensive checks
+    if region_df is None or region_df.empty:
+        return Serverside(pd.DataFrame())
 
-    def apply_indicator_name(index):
-        return series_indicator_names.loc[index]["namn"]
+    # Build mapping dicts safely
+    reg_map = {}
+    ind_map = {}
+    if reg_names is not None and not getattr(reg_names, "empty", True):
+        reg_map = reg_names.get("namn", pd.Series()).to_dict()
+    if series_indicator_names is not None and not getattr(series_indicator_names, "empty", True):
+        ind_map = series_indicator_names.get("namn", pd.Series()).to_dict()
 
-    
-    region_df.index = region_df.index.map(apply_index_name)
-    region_df.dimensions = region_df.dimensions.map(apply_indicator_name)
+    # Map index safely
+    region_df.index = region_df.index.astype(str).map(lambda x: reg_map.get(x, x))
+
+    # Map dimensions column safely
+    if "dimensions" in region_df.columns:
+        region_df["dimensions"] = region_df["dimensions"].map(lambda x: ind_map.get(x, x))
 
     return Serverside(region_df)
+
 
 
 @callback(
@@ -446,14 +457,15 @@ def create_reg_timeseries_data(region_df, reg_names, series_indicator_names):
     State("key-figures-finland-series-indicator-names-x", "data"),
 )
 def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["namn"]
+    # Build mapping dicts
+    reg_map = reg_names["namn"].to_dict()
+    ind_map = series_indicator_names["namn"].to_dict()
 
-    def apply_indicator_name(index):
-        return series_indicator_names.loc[index]["namn"]
+    # Map index safely
+    subregion_df.index = subregion_df.index.astype(str).map(lambda x: reg_map.get(x, x))
 
-    subregion_df.index = subregion_df.index.map(apply_index_name)
-    subregion_df.dimensions = subregion_df.dimensions.map(apply_indicator_name)
+    # Map dimensions column safely
+    subregion_df["dimensions"] = subregion_df["dimensions"].map(lambda x: ind_map.get(x, x))
 
     return Serverside(subregion_df)
 
@@ -465,14 +477,15 @@ def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_name
     State("key-figures-finland-series-indicator-names-x", "data"),
 )
 def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["namn"]
+    # Build mapping dicts
+    reg_map = reg_names["namn"].to_dict()
+    ind_map = series_indicator_names["namn"].to_dict()
 
-    def apply_indicator_name(index):
-        return series_indicator_names.loc[index]["namn"]
+    # Map index safely
+    mun_df.index = mun_df.index.astype(str).map(lambda x: reg_map.get(x, x))
 
-    mun_df.index = mun_df.index.map(apply_index_name)
-    mun_df.dimensions = mun_df.dimensions.map(apply_indicator_name)
+    # Map dimensions column safely
+    mun_df["dimensions"] = mun_df["dimensions"].map(lambda x: ind_map.get(x, x))
 
     return Serverside(mun_df)
 
@@ -542,7 +555,11 @@ def update_timeseries_chart(
         location = ["HELA LANDET"]
 
     try:
-        dff = dff.loc[location].query(f"dimensions=='{kf}'")
+        if set(location).issubset(dff.index):
+            dff = dff.loc[location].query(f"dimensions=='{kf}'")
+        else:
+            dff = region_df.loc[location].query(f"dimensions=='{kf}'")
+
 
     except:
         dff = region_df.loc[location].query(f"dimensions=='{kf}'")
@@ -680,7 +697,7 @@ def store_geojson(region, geojson_collection):
     Input("key-figures-finland-region-selection-sv", "value"),
     Input("key-figures-finland-key-figure-selection-sv", "value"),
 )
-def reset_map_selections(kf, reg):
+def reset_map_selections(reg, kf):
     return None, None
 
 
@@ -692,36 +709,45 @@ def reset_map_selections(kf, reg):
 )
 def store_data(key_figure, region):
 
-    dff = data_df.loc[region][["namn", key_figure]]
-    return list(dff["namn"].values), list(dff[key_figure].values)
+    try:
+        dff = data_df.loc[region][["namn", key_figure]]
+    except KeyError:
+        raise PreventUpdate
+    return list(dff["namn"].tolist()), list(dff[key_figure].tolist())
 
 
 clientside_callback(
     """
     function(geojson, locations, z, map_type, colorscale){           
-       
+        console.log("Updating map with data:", geojson, locations, z);
         var layout = {
-            'height':600,
-            'mapbox': {'style':map_type,'zoom':3.8,'center':{'lat': 64.961093, 'lon': 25.795386}
+            height: 600,
+            mapbox: {
+                style: map_type,
+                zoom: 3.8,
+                center: {lat: 64.961093, lon: 25.795386}
             },
-            'margin':{'l':0,'t':0,'b':0,'r':0}
+            margin: {l:0, t:0, b:0, r:0},
+            hovermode: "closest"
         };
-        var data = [{            
-            'type':'choroplethmapbox',            
-            'name':'',
-            'geojson':geojson,
-            'locations':locations,
-            'featureidkey':'properties.namn',
-            'hovertemplate': '<b>%{location}</b><br>%{z:,}',
-            'hoverlabel':{'font':{'family':'Arial Black', 'size':20, 'color':'black'},'bgcolor':'white'},
-            'z':z,
-            'colorscale':colorscale
+        var data = [{
+            type: 'choroplethmapbox',
+            name: '',
+            geojson: geojson,
+            locations: locations,
+            featureidkey: 'properties.namn',
+            hovertemplate: '<b>%{location}</b><br>%{z:,}',
+            hoverlabel: {
+                font: {family: 'Arial Black', size: 20, color: 'black'},
+                bgcolor: 'white'
+            },
+            z: z,
+            colorscale: colorscale
         }];
 
-        return {'data':data,'layout':layout}
-    }   
-
-""",
+        return {data: data, layout: layout};
+    }
+    """,
     Output("key-figures-finland-region-map-sv", "figure"),
     Input("key-figures-finland-geojson-data-sv", "data"),
     Input("key-figures-finland-locations-sv", "data"),

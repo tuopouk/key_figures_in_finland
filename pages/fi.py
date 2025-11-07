@@ -19,6 +19,8 @@ import requests
 from dash.exceptions import PreventUpdate
 import re
 import os
+# from app import geojson_collection
+
 # import stadiamaps
 # from stadiamaps.rest import ApiException
 
@@ -444,17 +446,26 @@ def update_definition(key_figure):
     Input("key-figures-finland-series-data-region-x", "data"),
     State("key-figures-finland-region-names-x", "data"),
     State("key-figures-finland-series-indicator-names-x", "data"),
-    prevent_initial_call=True
 )
-def create_region_timeseries_data(region_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["nimi"]
+def create_reg_timeseries_data(region_df, reg_names, series_indicator_names):
+    # Defensive checks
+    if region_df is None or region_df.empty:
+        return Serverside(pd.DataFrame())
 
-    def apply_indicator_name(index):
-        return series_indicator_names.loc[index]["nimi"]
+    # Build mapping dicts safely
+    reg_map = {}
+    ind_map = {}
+    if reg_names is not None and not getattr(reg_names, "empty", True):
+        reg_map = reg_names.get("nimi", pd.Series()).to_dict()
+    if series_indicator_names is not None and not getattr(series_indicator_names, "empty", True):
+        ind_map = series_indicator_names.get("nimi", pd.Series()).to_dict()
 
-    region_df.index = region_df.index.map(apply_index_name)
-    region_df.dimensions = region_df.dimensions.map(apply_indicator_name)
+    # Map index safely
+    region_df.index = region_df.index.astype(str).map(lambda x: reg_map.get(x, x))
+
+    # Map dimensions column safely
+    if "dimensions" in region_df.columns:
+        region_df["dimensions"] = region_df["dimensions"].map(lambda x: ind_map.get(x, x))
 
     return Serverside(region_df)
 
@@ -467,14 +478,32 @@ def create_region_timeseries_data(region_df, reg_names, series_indicator_names):
     prevent_initial_call=True
 )
 def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["nimi"]
+    # Build mapping dicts
+    reg_map = reg_names["nimi"].to_dict()
+    ind_map = series_indicator_names["nimi"].to_dict()
+
+    # Map index safely
+    subregion_df.index = subregion_df.index.astype(str).map(lambda x: reg_map.get(x, x))
+
+    # Map dimensions column safely
+    subregion_df["dimensions"] = subregion_df["dimensions"].map(lambda x: ind_map.get(x, x))
+
+    return Serverside(subregion_df)
+
+# def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_names):
+#     def apply_index_name(index):
+#         try:
+#             return reg_names.loc[index, "nimi"]
+#         except KeyError:
+#             return index  # fallback: keep original if not found
+
 
     def apply_indicator_name(index):
         return series_indicator_names.loc[index]["nimi"]
 
-    subregion_df.index = subregion_df.index.map(apply_index_name)
-    subregion_df.dimensions = subregion_df.dimensions.map(apply_indicator_name)
+    subregion_df.index = subregion_df.index.astype(str).map(apply_index_name)
+
+    subregion_df["dimensions"] = subregion_df["dimensions"].map(apply_indicator_name)
 
     return Serverside(subregion_df)
 
@@ -487,17 +516,17 @@ def create_subreg_timeseries_data(subregion_df, reg_names, series_indicator_name
     prevent_initial_call=True
 )
 def create_local_timeseries_data(mun_df, reg_names, series_indicator_names):
-    def apply_index_name(index):
-        return reg_names.loc[index]["nimi"]
+    # Build mapping dicts
+    reg_map = reg_names["nimi"].to_dict()
+    ind_map = series_indicator_names["nimi"].to_dict()
 
-    def apply_indicator_name(index):
-        return series_indicator_names.loc[index]["nimi"]
+    # Map index safely
+    mun_df.index = mun_df.index.astype(str).map(lambda x: reg_map.get(x, x))
 
-    mun_df.index = mun_df.index.map(apply_index_name)
-    mun_df.dimensions = mun_df.dimensions.map(apply_indicator_name)
+    # Map dimensions column safely
+    mun_df["dimensions"] = mun_df["dimensions"].map(lambda x: ind_map.get(x, x))
 
     return Serverside(mun_df)
-
 
 @callback(
     Output("key-figures-finland-timeseries-fi", "figure"),
@@ -562,7 +591,11 @@ def update_timeseries_chart(
         location = ["KOKO MAA"]
 
     try:
-        dff = dff.loc[location].query(f"dimensions=='{kf}'")
+        if set(location).issubset(dff.index):
+            dff = dff.loc[location].query(f"dimensions=='{kf}'")
+        else:
+            dff = region_df.loc[location].query(f"dimensions=='{kf}'")
+
 
     except:
         dff = region_df.loc[location].query(f"dimensions=='{kf}'")
@@ -686,6 +719,7 @@ def update_whole_country_header(key_figure):
     State("key-figures-finland-geojson-collection-x", "data")
 )
 def store_geojson(region, geojson_collection):
+
     return geojson_collection[
         {"Kunta": "Municipality", "Seutukunta": "Sub-region", "Maakunta": "Region"}[
             region
@@ -700,7 +734,7 @@ def store_geojson(region, geojson_collection):
     Input("key-figures-finland-key-figure-selection-fi", "value"),
     prevent_initial_call=True
 )
-def reset_map_selections(kf, reg):
+def reset_map_selections(reg, kf):
     return None, None
 
 
@@ -713,36 +747,46 @@ def reset_map_selections(kf, reg):
 )
 def store_data(key_figure, region):
 
-    dff = data_df.loc[region][["nimi", key_figure]]
-    return list(dff["nimi"].values), list(dff[key_figure].values)
+    try:
+        dff = data_df.loc[region][["nimi", key_figure]]
+    except KeyError:
+        raise PreventUpdate
+
+    return list(dff["nimi"].tolist()), list(dff[key_figure].tolist())
 
 
 clientside_callback(
     """
     function(geojson, locations, z, map_type, colorscale){           
-       
+        console.log("Updating map with data:", geojson, locations, z);
         var layout = {
-            'height':600,
-            'mapbox': {'style':map_type,'zoom':3.8,'center':{'lat': 64.961093, 'lon': 25.795386}
+            height: 600,
+            mapbox: {
+                style: map_type,
+                zoom: 3.8,
+                center: {lat: 64.961093, lon: 25.795386}
             },
-            'margin':{'l':0,'t':0,'b':0,'r':0}
+            margin: {l:0, t:0, b:0, r:0},
+            hovermode: "closest"
         };
-        var data = [{            
-            'type':'choroplethmapbox',            
-            'name':'',
-            'geojson':geojson,
-            'locations':locations,
-            'featureidkey':'properties.nimi',
-            'hovertemplate': '<b>%{location}</b><br>%{z:,}',
-            'hoverlabel':{'font':{'family':'Arial Black', 'size':20, 'color':'black'},'bgcolor':'white'},
-            'z':z,
-            'colorscale':colorscale
+        var data = [{
+            type: 'choroplethmapbox',
+            name: '',
+            geojson: geojson,
+            locations: locations,
+            featureidkey: 'properties.nimi',
+            hovertemplate: '<b>%{location}</b><br>%{z:,}',
+            hoverlabel: {
+                font: {family: 'Arial Black', size: 20, color: 'black'},
+                bgcolor: 'white'
+            },
+            z: z,
+            colorscale: colorscale
         }];
 
-        return {'data':data,'layout':layout}
-    }   
-
-""",
+        return {data: data, layout: layout};
+    }
+    """,
     Output("key-figures-finland-region-map-fi", "figure"),
     Input("key-figures-finland-geojson-data-fi", "data"),
     Input("key-figures-finland-locations-fi", "data"),
