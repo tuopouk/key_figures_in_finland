@@ -26,7 +26,15 @@ import pandas as pd
 import numpy as np
 # import geopandas as gpd
 import json
+import time
+import os
 
+
+
+from cachelib.file import FileSystemCache
+
+# configure cache directory
+cache = FileSystemCache(cache_dir="C:/temp/mycache", threshold=500, default_timeout=300)
 
 # https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta1000k_2023&outputFormat=json
 with open("assets/municipalities_multilang.json", encoding="utf-8") as f:
@@ -48,166 +56,182 @@ geojson_collection = {
 }
 
 
+
+# Helpers
+def safe_post(url, payload, headers, retries=5, delay=5):
+    for attempt in range(retries):
+        resp = requests.post(url, json=payload, headers=headers)
+        if resp.status_code == 200:
+            return resp.json()
+        elif resp.status_code == 429:
+            wait = delay * (attempt + 1)
+            print(f"Rate limited, waiting {wait}s...")
+            time.sleep(wait)
+        else:
+            resp.raise_for_status()
+    raise RuntimeError("Failed after retries")
+
+def fetch_meta_cached(url, headers, region_level):
+    cache_file = f"./assets/{region_level}_meta.json"
+    if os.path.exists(cache_file):
+        with open(cache_file, "rb") as f:
+            return orjson.loads(f.read())
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    meta = resp.json()
+    with open(cache_file, "wb") as f:
+        f.write(orjson.dumps(meta))
+    return meta
+
+def load_or_fetch_timeseries(region_level, cache_file):
+    if os.path.exists(cache_file):
+        return pd.read_pickle(cache_file)
+    df = get_timeseries_data(region_level)
+    df.to_pickle(cache_file)
+    return df
+
+
+
 def get_region_names():
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
+        "User-Agent": "Mozilla/5.0",
         "Content-Type": "application/json",
     }
     df = None
     for lang in ["fi", "sv", "en"]:
         url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/uusin/kuntien_avainluvut_viimeisin.px"
-        json = requests.get(url, headers=headers).json()
+        resp = requests.get(url, headers=headers)
+        meta = resp.json()
+        if "variables" not in meta:
+            print("API error:", meta)
+            continue
         dff = pd.DataFrame(
             [
                 {"id": i, {"fi": "nimi", "sv": "namn", "en": "name"}[lang]: name}
-                for i, name in zip(
-                    json["variables"][0]["values"], json["variables"][0]["valueTexts"]
-                )
+                for i, name in zip(meta["variables"][0]["values"], meta["variables"][0]["valueTexts"])
             ]
         )
-        if df is None:
-            df = dff
-        else:
-            df = pd.merge(left=df, right=dff, on="id", how="inner")
-    df = df.astype(
-        {"id": "category", "nimi": "category", "namn": "category", "name": "category"}
-    )
-    df.nimi = [c if c == 'KOKO MAA' or (c[:2]!='SK' and c[:2]!='MK') else ' '.join(c.split()[1:]).strip() for c in df.nimi]
-    df.name = [c if c == 'WHOLE COUNTRY' or (c[:2]!='SK' and c[:2]!='MK')  else ' '.join(c.split()[1:]).strip() for c in df.name]
-    df.namn = [c if c == 'HELA LANDET' or (c[:2]!='SK' and c[:2]!='MK') else ' '.join(c.split()[1:]).strip() for c in df.namn]
-    
+        df = dff if df is None else pd.merge(df, dff, on="id", how="inner")
+
+    if df is None:
+        # Return empty DataFrame with expected columns
+        return pd.DataFrame(columns=["id", "nimi", "namn", "name"]).set_index("id")
+
+    df = df.astype({"id": "category", "nimi": "category", "namn": "category", "name": "category"})
+    # Clean names
+    df.nimi = [c if c == "KOKO MAA" or (c[:2] not in ["SK", "MK"]) else " ".join(c.split()[1:]).strip() for c in df.nimi]
+    df.name = [c if c == "WHOLE COUNTRY" or (c[:2] not in ["SK", "MK"]) else " ".join(c.split()[1:]).strip() for c in df.name]
+    df.namn = [c if c == "HELA LANDET" or (c[:2] not in ["SK", "MK"]) else " ".join(c.split()[1:]).strip() for c in df.namn]
+
     return df.set_index("id")
+
+
 
 
 def get_series_indicator_names():
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
+        "User-Agent": "Mozilla/5.0",
         "Content-Type": "application/json",
     }
     df = None
     for lang in ["fi", "sv", "en"]:
         url = f"https://pxdata.stat.fi:443/PxWeb/api/v1/{lang}/Kuntien_avainluvut/uusin/kuntien_avainluvut_aikasarja.px"
-        json = requests.get(url, headers=headers).json()
+        resp = requests.get(url, headers=headers)
+        meta = resp.json()
+        if "variables" not in meta:
+            print("API error:", meta)
+            continue
         dff = pd.DataFrame(
             [
                 {"id": i, {"fi": "nimi", "sv": "namn", "en": "name"}[lang]: name}
                 for i, name in zip(
-                    json["variables"][1]["values"], json["variables"][1]["valueTexts"]
+                    meta["variables"][1]["values"], meta["variables"][1]["valueTexts"]
                 )
             ]
         )
-        if df is None:
-            df = dff
-        else:
-            df = pd.merge(left=df, right=dff, on="id", how="inner")
-    df = df.astype(
-        {"id": "category", "nimi": "category", "namn": "category", "name": "category"}
-    )
+        df = dff if df is None else pd.merge(df, dff, on="id", how="inner")
+
+    if df is None:
+        # Return empty DataFrame with expected columns
+        return pd.DataFrame(columns=["id", "nimi", "namn", "name"]).set_index("id")
+
+    # Ensure all expected columns exist, even if empty
+    for col in ["nimi", "namn", "name"]:
+        if col not in df.columns:
+            df[col] = pd.Series(dtype="string")
+
+    # Cast only existing columns
+    dtype_map = {"id": "category", "nimi": "category", "namn": "category", "name": "category"}
+    existing_map = {col: dtype for col, dtype in dtype_map.items() if col in df.columns}
+    df = df.astype(existing_map)
+
     return df.set_index("id")
 
 
-def get_timeseries_data(region_level, split=5):
 
+def get_timeseries_data(region_level, split=10):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
+        "User-Agent": "Mozilla/5.0",
         "Content-Type": "application/json",
     }
-
     with open(f"./assets/{region_level}_series_payload.json") as f:
         payload = orjson.loads(f.read())
-
     series_url = "https://pxdata.stat.fi:443/PxWeb/api/v1/en/Kuntien_avainluvut/uusin/kuntien_avainluvut_aikasarja.px"
-
+    meta = fetch_meta_cached(series_url, headers, region_level)
+    if "variables" not in meta:
+        print("Metadata error:", meta)
+        return pd.DataFrame()
     if region_level == "Municipality":
-
-        year_lists = np.array_split(
-            [
-                str(c)
-                for c in requests.get(series_url, headers=headers).json()["variables"][
-                    -1
-                ]["values"]
-            ],
-            split,
-        )
-
+        year_values = meta["variables"][-1]["values"]
+        year_lists = np.array_split([str(c) for c in year_values], split)
         dfs = []
-
         for year_list in year_lists:
-            payload["query"][-1]["selection"] = {
-                "filter": "item",
-                "values": list(year_list),
-            }
-
-            json = requests.post(series_url, json=payload, headers=headers).json()
-            cities = list(json["dimension"]["Alue"]["category"]["label"].keys())
-
-            dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].keys())
-            years = list(json["dimension"]["Vuosi"]["category"]["label"].values())
-
-            values = json["value"]
-
-            cities_df = pd.DataFrame(cities, columns=["Region"])
-            cities_df["Region"] = cities_df["Region"].astype("category")
-            cities_df["index"] = 0
-            dimensions_df = pd.DataFrame(dimensions, columns=["dimensions"])
-            dimensions_df["dimensions"] = dimensions_df["dimensions"].astype("category")
-            dimensions_df["index"] = 0
-            years_df = pd.DataFrame(years, columns=["Year"])
-            years_df["Year"] = years_df["Year"].astype("category")
-            years_df["index"] = 0
-
-            data = pd.merge(
-                left=pd.merge(
-                    left=cities_df, right=dimensions_df, on="index", how="outer"
-                ),
-                right=years_df,
-                how="outer",
-                on="index",
-            ).drop("index", axis=1)
-
-            data["value"] = values
-            dfs.append(data.set_index("Region"))
-        data = pd.concat(dfs)
-        data.dropna(axis=0, inplace=True)
-        return data
-
-    else:
-
-        json = requests.post(series_url, json=payload, headers=headers).json()
-
-        cities = list(json["dimension"]["Alue"]["category"]["label"].keys())
-
-        dimensions = list(json["dimension"]["Tiedot"]["category"]["label"].keys())
-        years = list(json["dimension"]["Vuosi"]["category"]["label"].values())
-
-        values = json["value"]
-
-        cities_df = pd.DataFrame(cities, columns=["Region"])
-        cities_df["Region"] = cities_df["Region"].astype("category")
-        cities_df["index"] = 0
-        dimensions_df = pd.DataFrame(dimensions, columns=["dimensions"])
-        dimensions_df["dimensions"] = dimensions_df["dimensions"].astype("category")
-        dimensions_df["index"] = 0
-        years_df = pd.DataFrame(years, columns=["Year"])
-        years_df["Year"] = years_df["Year"].astype("category")
-        years_df["index"] = 0
-
-        data = pd.merge(
-            left=pd.merge(left=cities_df, right=dimensions_df, on="index", how="outer"),
-            right=years_df,
-            how="outer",
-            on="index",
-        ).drop("index", axis=1)
-
-        data["value"] = values
-        data.dropna(axis=0, inplace=True)
-
-        return data.set_index("Region")
+            payload["query"][-1]["selection"] = {"filter": "item", "values": list(year_list)}
+            data = safe_post(series_url, payload, headers)
+            if "dimension" not in data:
+                print("Data error:", data)
+                continue
+            cities = list(data["dimension"]["Alue"]["category"]["label"].keys())
+            dimensions = list(data["dimension"]["Tiedot"]["category"]["label"].keys())
+            years = list(data["dimension"]["Vuosi"]["category"]["label"].values())
+            values = data["value"]
+            cities_df = pd.DataFrame(cities, columns=["Region"]).astype("category")
+            dimensions_df = pd.DataFrame(dimensions, columns=["dimensions"]).astype("category")
+            years_df = pd.DataFrame(years, columns=["Year"]).astype("category")
+            cities_df["index"] = dimensions_df["index"] = years_df["index"] = 0
+            data_df = pd.merge(pd.merge(cities_df, dimensions_df, on="index"), years_df, on="index").drop("index", axis=1)
+            data_df["value"] = values
+            dfs.append(data_df.set_index("Region"))
+        if dfs:
+            data = pd.concat(dfs)
+            data.dropna(axis=0, inplace=True)
+            return data
+        return pd.DataFrame()
 
 
-timeseries_region = get_timeseries_data("Region")
-timeseries_subregion = get_timeseries_data("Sub-region")
-timeseries_municipality = get_timeseries_data("Municipality")
+# timeseries_region = get_timeseries_data("Region")
+# timeseries_subregion = get_timeseries_data("Sub-region")
+# timeseries_municipality = get_timeseries_data("Municipality")
+# Top-level loads with cache and error handling
+try:
+    timeseries_region = load_or_fetch_timeseries("Region", "./assets/region_timeseries.pkl")
+except Exception as e:
+    print("Failed to load region timeseries:", e)
+    timeseries_region = pd.DataFrame()
+try:
+    timeseries_subregion = load_or_fetch_timeseries(
+        "Sub-region", "./assets/subregion_timeseries.pkl"
+    )
+except Exception as e:
+    print("Failed to load subregion timeseries:", e)
+    timeseries_subregion = pd.DataFrame()
+try:
+    timeseries_municipality = load_or_fetch_timeseries(
+        "Municipality", "./assets/municipality_timeseries.pkl"
+    )
+except Exception as e:
+    print("Failed to load municipality timeseries:", e)
+    timeseries_municipality = pd.DataFrame()
 
 series_indicator_names = get_series_indicator_names()
 reg_names = get_region_names()
